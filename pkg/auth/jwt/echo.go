@@ -13,7 +13,8 @@ const (
 )
 
 //EchoAuth jwt注入鉴定
-func EchoJwt() echo.MiddlewareFunc {
+func EchoJwt(u IUser) echo.MiddlewareFunc {
+    setUserMode(u)
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			// 跳过 WebSocket

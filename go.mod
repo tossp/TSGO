@@ -8,31 +8,45 @@ require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/fsnotify/fsnotify v1.4.7
 	github.com/gemnasium/logrus-graylog-hook/v3 v3.0.2
+	github.com/gin-contrib/sse v0.1.0 // indirect
+	github.com/gin-gonic/gin v1.4.0
 	github.com/go-playground/locales v0.12.1
 	github.com/go-playground/universal-translator v0.16.0
 	github.com/go-xorm/xorm v0.7.9
+	github.com/golang/protobuf v1.3.2 // indirect
+	github.com/gopherjs/gopherjs v0.0.0-20190915194858-d3ddacdb130f // indirect
 	github.com/guregu/null v3.4.0+incompatible
 	github.com/inconshreveable/go-update v0.0.0-20160112193335-8152e7eb6ccf
 	github.com/jinzhu/gorm v1.9.11
+	github.com/json-iterator/go v1.1.7 // indirect
+	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
 	github.com/labstack/echo/v4 v4.1.11
 	github.com/leodido/go-urn v1.1.0 // indirect
 	github.com/lib/pq v1.2.0 // indirect
 	github.com/magiconair/properties v1.8.1 // indirect
+	github.com/mattn/go-colorable v0.1.4 // indirect
+	github.com/mattn/go-isatty v0.0.10 // indirect
 	github.com/minio/minio-go/v6 v6.0.39
 	github.com/mozillazg/go-pinyin v0.15.0
 	github.com/pelletier/go-toml v1.5.0 // indirect
 	github.com/pkg/errors v0.8.1
 	github.com/satori/go.uuid v1.2.0
 	github.com/sirupsen/logrus v1.4.2
+	github.com/smartystreets/assertions v1.0.1 // indirect
+	github.com/smartystreets/goconvey v0.0.0-20190731233626-505e41936337 // indirect
 	github.com/spf13/afero v1.2.2 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.4.0
-	golang.org/x/crypto v0.0.0-20191002192127-34f69633bfdc
-	golang.org/x/sys v0.0.0-20191009170203-06d7bd2c5f4f // indirect
+	github.com/ugorji/go/codec v1.1.7 // indirect
+	github.com/valyala/fasttemplate v1.1.0 // indirect
+	golang.org/x/crypto v0.0.0-20191010185427-af544f31c8ac
+	golang.org/x/net v0.0.0-20191009170851-d66e71096ffb // indirect
+	golang.org/x/sys v0.0.0-20191010194322-b09406accb47 // indirect
 	golang.org/x/xerrors v0.0.0-20190717185122-a985d3407aa7
 	google.golang.org/appengine v1.6.5 // indirect
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
-	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/validator.v9 v9.30.0
+	gopkg.in/ini.v1 v1.48.0 // indirect
+	xorm.io/core v0.7.2 // indirect
 )

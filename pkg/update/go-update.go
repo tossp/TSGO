@@ -3,7 +3,7 @@ package update
 import (
 	"net/http"
 
-	"github.com/inconshreveable/go-update"
+	up "github.com/inconshreveable/go-update"
 )
 
 func doUpdate(url string) error {
@@ -12,7 +12,7 @@ func doUpdate(url string) error {
 		return err
 	}
 	defer resp.Body.Close()
-	err = update.Apply(resp.Body, update.Options{})
+	err = up.Apply(resp.Body, up.Options{})
 	if err != nil {
 		// error handling
 	}

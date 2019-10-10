@@ -46,7 +46,7 @@ func config() {
 
 	viper.SetConfigName(configFileName)
 	viper.AddConfigPath(viper.GetString(ConfigDirKey))
-	viper.AddConfigPath(UseAppPath("conf"))
+	viper.AddConfigPath(UseAppPath("configs"))
 	viper.AddConfigPath(appPath)
 	viper.AddConfigPath("$HOME/.ts_site")
 	viper.AddConfigPath(".")
@@ -107,7 +107,7 @@ func write() {
 
 func defConfig() {
 	viper.SetDefault(DataDirKey, UseAppPath("data"))
-	viper.SetDefault(ConfigDirKey, UseAppPath("conf"))
+	viper.SetDefault(ConfigDirKey, UseAppPath("configs"))
 	viper.SetDefault("secret", utils.GetRandomString(32))
 	viper.SetDefault("db.User", "ts")
 	viper.SetDefault("db.Password", "123456")

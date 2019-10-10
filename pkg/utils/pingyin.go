@@ -1,6 +1,6 @@
 package utils
 
-import "github.com/mozillazg/go-pinyin"
+import pinyin "github.com/mozillazg/go-pinyin"
 
 //ToPinyin  汉字转拼音
 func ToPinyin(name string) string {

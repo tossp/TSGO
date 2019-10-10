@@ -8,7 +8,7 @@ import (
 	"github.com/tossp/tsgo/pkg/setting"
 	"github.com/tossp/tsgo/pkg/utils/crypto"
 
-	"github.com/dgrijalva/jwt-go"
+	jwt "github.com/dgrijalva/jwt-go"
 	uuid "github.com/satori/go.uuid"
 )
 
@@ -22,32 +22,31 @@ const (
 )
 
 type IUser interface {
-    New()IUser
-    GetByID(uuid.UUID)error
-    ID()uuid.UUID
+	New() IUser
+	GetByID(uuid.UUID) error
+	ID() uuid.UUID
 }
 
-type user struct {    }
+type user struct{}
 
-func (m *user)New() IUser {
-    panic("请使用 jwt.SetUserMode 初始化默认用户接口")
+func (m *user) New() IUser {
+	panic("请使用 jwt.SetUserMode 初始化默认用户接口")
 }
 
-func (m *user)GetByID(id uuid.UUID) error {
-    panic("请使用 jwt.SetUserMode 初始化默认用户接口")
+func (m *user) GetByID(id uuid.UUID) error {
+	panic("请使用 jwt.SetUserMode 初始化默认用户接口")
 }
-func (m *user)ID( ) uuid.UUID {
-    panic("请使用 jwt.SetUserMode 初始化默认用户接口")
-}
-
-
-func SetUserMode(u IUser){
-    defUser=u
+func (m *user) ID() uuid.UUID {
+	panic("请使用 jwt.SetUserMode 初始化默认用户接口")
 }
 
-var(
-    tokenKey = crypto.NewKeyWithKey([]byte(setting.GetSecret()))
-    defUser IUser=new(user)
+func setUserMode(u IUser) {
+	defUser = u
+}
+
+var (
+	tokenKey       = crypto.NewKeyWithKey([]byte(setting.GetSecret()))
+	defUser  IUser = new(user)
 )
 
 type TsClaims struct {

@@ -12,7 +12,7 @@ import (
 	zhLocales "github.com/go-playground/locales/zh"
 	ut "github.com/go-playground/universal-translator"
 	"github.com/guregu/null"
-	"gopkg.in/go-playground/validator.v9"
+	validator "gopkg.in/go-playground/validator.v9"
 	zhTrans "gopkg.in/go-playground/validator.v9/translations/zh"
 )
 
@@ -36,7 +36,7 @@ func kindOfData(data interface{}) reflect.Kind {
 
 // Validate For echo
 func (v *defaultValidator) Validate(i interface{}) error {
-	return v.validator.Struct(i)
+	return v.Struct(i)
 }
 
 func (v *defaultValidator) Var(field interface{}, tag string) error {

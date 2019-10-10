@@ -8,7 +8,7 @@ import (
 	"github.com/tossp/tsgo/pkg/errors"
 	"github.com/tossp/tsgo/pkg/setting"
 
-	"github.com/minio/minio-go/v6"
+	minio "github.com/minio/minio-go/v6"
 )
 
 const expires = time.Hour

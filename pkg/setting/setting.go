@@ -1,9 +1,14 @@
 package setting
 
 import (
+	"crypto/ecdsa"
 	"os"
 	"path"
 	"path/filepath"
+
+	"github.com/tossp/tsgo/pkg/utils/crypto"
+
+	"github.com/spf13/viper"
 )
 
 const (
@@ -14,7 +19,14 @@ const (
 )
 
 var (
-	appPath string
+	GitTag       = "syntax error"
+	GitVersion   = "syntax error"
+	BuildTime    = "syntax error"
+	BuildVersion = "syntax error"
+	ProjectName  = "syntax error"
+	appPath      string
+	globalKey    *ecdsa.PrivateKey
+	globalAseKey []byte
 )
 
 func init() {
@@ -22,6 +34,11 @@ func init() {
 	appPath = filepath.Clean(appPath)
 	config()
 	watch()
+	globalKey = crypto.NewKeyWithKey([]byte(GetSecret()))
+	globalAseKey = crypto.GenerateSharedSecret(globalKey, &crypto.NewKeyWithKey([]byte("砼砼")).PublicKey)
+	if viper.GetString("control.pass") == "" {
+		SetKeyPass("mcit")
+	}
 }
 
 func UseAppPath(elem ...string) string {
@@ -33,5 +50,5 @@ func joinPath(base string, elem ...string) string {
 }
 
 func UseDataPath(elem ...string) string {
-	return UseAppPath(elem ...)
+	return UseAppPath(elem...)
 }

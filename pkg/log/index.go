@@ -7,7 +7,7 @@ import (
 
 	//"tsl/core/setting/machineid"
 
-	"github.com/gemnasium/logrus-graylog-hook/v3"
+	graylog "github.com/gemnasium/logrus-graylog-hook/v3"
 	"github.com/sirupsen/logrus"
 )
 
