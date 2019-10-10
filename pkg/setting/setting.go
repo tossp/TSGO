@@ -33,6 +33,5 @@ func joinPath(base string, elem ...string) string {
 }
 
 func UseDataPath(elem ...string) string {
-	return filepath.Clean(path.Join(append([]string{appPath})...))
-	return UseAppPath()
+	return UseAppPath(elem ...)
 }

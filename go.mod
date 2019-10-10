@@ -5,6 +5,7 @@ go 1.13
 require (
 	github.com/casbin/casbin/v2 v2.0.2
 	github.com/denisenkom/go-mssqldb v0.0.0-20191001013358-cfbb681360f0 // indirect
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/fsnotify/fsnotify v1.4.7
 	github.com/gemnasium/logrus-graylog-hook/v3 v3.0.2
 	github.com/go-playground/locales v0.12.1

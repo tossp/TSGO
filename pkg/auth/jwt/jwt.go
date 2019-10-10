@@ -24,19 +24,22 @@ const (
 type IUser interface {
     New()IUser
     GetByID(uuid.UUID)error
+    ID()uuid.UUID
 }
 
 type user struct {    }
 
 func (m *user)New() IUser {
-    panic("请使用SetUserMode初始化默认用户接口")
-    return m
+    panic("请使用 jwt.SetUserMode 初始化默认用户接口")
 }
 
 func (m *user)GetByID(id uuid.UUID) error {
-    panic("请使用SetUserMode初始化默认用户接口")
-    return nil
+    panic("请使用 jwt.SetUserMode 初始化默认用户接口")
 }
+func (m *user)ID( ) uuid.UUID {
+    panic("请使用 jwt.SetUserMode 初始化默认用户接口")
+}
+
 
 func SetUserMode(u IUser){
     defUser=u
