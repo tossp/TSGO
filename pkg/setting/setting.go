@@ -1,14 +1,13 @@
 package setting
 
 import (
-	"crypto/ecdsa"
-	"os"
-	"path"
-	"path/filepath"
+    "crypto/ecdsa"
+    "os"
+    "path/filepath"
 
-	"github.com/tossp/tsgo/pkg/utils/crypto"
+    "github.com/tossp/tsgo/pkg/utils/crypto"
 
-	"github.com/spf13/viper"
+    "github.com/spf13/viper"
 )
 
 const (
@@ -19,14 +18,16 @@ const (
 )
 
 var (
-	GitTag       = "syntax error"
-	GitVersion   = "syntax error"
-	BuildTime    = "syntax error"
-	BuildVersion = "syntax error"
-	ProjectName  = "syntax error"
-	appPath      string
-	globalKey    *ecdsa.PrivateKey
-	globalAseKey []byte
+	GitTag       = "invalid"
+	GitVersion   = "invalid"
+	BuildTime    = "invalid"
+	BuildVersion = "invalid"
+	ProjectName  = "invalid"
+)
+var (
+    appPath      string
+    globalKey    *ecdsa.PrivateKey
+    globalAseKey []byte
 )
 
 func init() {
@@ -46,9 +47,12 @@ func UseAppPath(elem ...string) string {
 }
 
 func joinPath(base string, elem ...string) string {
-	return path.Join(base, filepath.Clean(path.Join(elem...)))
+	return filepath.Join(base, filepath.Clean(filepath.Join(elem...)))
 }
 
 func UseDataPath(elem ...string) string {
-	return UseAppPath(elem...)
+    return joinPath(viper.GetString(DataDirKey),elem...)
+}
+func UseConfigPath(elem ...string) string {
+    return joinPath(viper.GetString(ConfigDirKey),elem...)
 }
