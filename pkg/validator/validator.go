@@ -7,11 +7,11 @@ import (
 	"sync"
 
 	"github.com/tossp/tsgo/pkg/log"
+    "github.com/tossp/tsgo/pkg/null"
 
-	enLocales "github.com/go-playground/locales/en"
+    enLocales "github.com/go-playground/locales/en"
 	zhLocales "github.com/go-playground/locales/zh"
 	ut "github.com/go-playground/universal-translator"
-	"github.com/guregu/null"
 	validator "gopkg.in/go-playground/validator.v9"
 	zhTrans "gopkg.in/go-playground/validator.v9/translations/zh"
 )

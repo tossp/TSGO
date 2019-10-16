@@ -2,7 +2,8 @@ package jwt
 
 import (
 	"net/http"
-	"time"
+    "strings"
+    "time"
 
 	"github.com/labstack/echo/v4"
 )
@@ -63,6 +64,9 @@ func EchoAuth() echo.MiddlewareFunc {
 			if (c.Request().Header.Get(echo.HeaderUpgrade)) == "websocket" {
 				return next(c)
 			}
+            if strings.Index(c.Request().URL.Path,"/v1/system/develop/debug/pprof")==0 {
+                return next(c)
+            }
 			err := c.Get(authErrKey)
 			if err == nil && c.Get(authUserKey) != nil {
 				return next(c)

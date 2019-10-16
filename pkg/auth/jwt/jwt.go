@@ -5,11 +5,11 @@ import (
 	"time"
 
 	"github.com/tossp/tsgo/pkg/log"
-	"github.com/tossp/tsgo/pkg/setting"
+    "github.com/tossp/tsgo/pkg/null"
+    "github.com/tossp/tsgo/pkg/setting"
 	"github.com/tossp/tsgo/pkg/utils/crypto"
 
 	jwt "github.com/dgrijalva/jwt-go"
-	uuid "github.com/satori/go.uuid"
 )
 
 const (
@@ -23,8 +23,8 @@ const (
 
 type IUser interface {
 	New() IUser
-	GetByID(uuid.UUID) error
-	ID() uuid.UUID
+	GetByID( null.UUID) error
+	ID() null.UUID
 }
 
 type user struct{}
@@ -33,10 +33,10 @@ func (m *user) New() IUser {
 	panic("请使用 jwt.SetUserMode 初始化默认用户接口")
 }
 
-func (m *user) GetByID(id uuid.UUID) error {
+func (m *user) GetByID(id null.UUID) error {
 	panic("请使用 jwt.SetUserMode 初始化默认用户接口")
 }
-func (m *user) ID() uuid.UUID {
+func (m *user) ID() null.UUID {
 	panic("请使用 jwt.SetUserMode 初始化默认用户接口")
 }
 
@@ -51,11 +51,11 @@ var (
 
 type TsClaims struct {
 	jwt.StandardClaims
-	UserID uuid.UUID `json:"user_id"`
+	UserID null.UUID `json:"user_id"`
 }
 
 //GenerateToken 生成Token
-func GenerateToken(id uuid.UUID, ct time.Time) (t string) {
+func GenerateToken(id null.UUID, ct time.Time) (t string) {
 	claims := new(TsClaims)
 	claims.ExpiresAt = ct.Add(expHour).Unix()
 	claims.NotBefore = ct.Unix()

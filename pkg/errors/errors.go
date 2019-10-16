@@ -117,7 +117,7 @@ func (e *MessageError) Unwrap() error {
 }
 
 func (e *MessageError) FormatError(p xerrors.Printer) (next error) {
-	p.Printf("%d %s", e.code, e.msg)
+	p.Printf("[%d] %s", e.code, e.msg)
 	e.frame.Format(p)
 	next = e.Parent()
 	return
