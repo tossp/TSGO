@@ -9,6 +9,11 @@ import (
     uuid "github.com/satori/go.uuid"
 )
 
+var (
+    NamespaceTS = uuid.Must(uuid.FromString("19860912-9dad-11d1-80b4-00c04fd430c8"))
+    NamespaceZH = uuid.Must(uuid.FromString("00000001-1986-0912-0511-013419290962"))
+)
+
 // Time is a nullable uuid.UUID. It supports SQL and JSON serialization.
 // It will marshal to null if null.
 type UUID struct {
@@ -147,4 +152,48 @@ func (u UUID) Ptr() *uuid.UUID {
 // A non-null Time with a zero value will not be considered zero.
 func (u UUID) IsZero() bool {
     return !u.Valid
+}
+
+func (u *UUID) NewV1() {
+    u.UUID = uuid.NewV1()
+    u.Valid = true
+}
+func (u *UUID) NewV2(domain byte) {
+    u.UUID = uuid.NewV2(domain)
+    u.Valid = true
+}
+func (u *UUID) NewV3(ns uuid.UUID, name string) {
+    u.UUID = uuid.NewV3(ns, name)
+    u.Valid = true
+}
+func (u *UUID) NewV4() {
+    u.UUID = uuid.NewV4()
+    u.Valid = true
+}
+func (u *UUID) NewV5(ns uuid.UUID, name string) {
+    u.UUID = uuid.NewV5(ns, name)
+    u.Valid = true
+}
+func (u UUID) NamespaceDNS() uuid.UUID {
+    return uuid.NamespaceDNS
+}
+func (u UUID) NamespaceURL() uuid.UUID {
+    return uuid.NamespaceURL
+}
+func (u UUID) NamespaceOID() uuid.UUID {
+    return uuid.NamespaceOID
+}
+
+func (u UUID) NamespaceX500() uuid.UUID {
+    return uuid.NamespaceX500
+}
+func (u UUID) NamespaceTS() uuid.UUID {
+    return NamespaceTS
+}
+func (u UUID) NamespaceZH() uuid.UUID {
+    return NamespaceZH
+}
+
+func NewUuidV4() uuid.UUID {
+    return uuid.NewV4()
 }
