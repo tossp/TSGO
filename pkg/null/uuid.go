@@ -113,7 +113,9 @@ func (u *UUID) UnmarshalJSON(data []byte) error {
     u.Valid = err == nil
     return err
 }
-
+func (u UUID) String() string{
+    return u.UUID.String()
+}
 func (u UUID) MarshalText() ([]byte, error) {
     if !u.Valid {
         return []byte("null"), nil
