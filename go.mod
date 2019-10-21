@@ -10,7 +10,7 @@ require (
 	github.com/gemnasium/logrus-graylog-hook/v3 v3.0.2
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/gin-gonic/gin v1.4.0
-	github.com/go-playground/locales v0.12.1
+	github.com/go-playground/locales v0.13.0
 	github.com/go-playground/universal-translator v0.16.0
 	github.com/go-xorm/xorm v0.7.9
 	github.com/golang/protobuf v1.3.2 // indirect
@@ -37,15 +37,15 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.4.0
-	github.com/ugorji/go v1.1.7 // indirect
+	github.com/ugorji/go/codec v1.1.7 // indirect
 	github.com/valyala/fasttemplate v1.1.0 // indirect
 	golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550
-	golang.org/x/net v0.0.0-20191014212845-da9a3fd4c582 // indirect
-	golang.org/x/sys v0.0.0-20191010194322-b09406accb47 // indirect
+	golang.org/x/net v0.0.0-20191021144547-ec77196f6094 // indirect
+	golang.org/x/sys v0.0.0-20191020212454-3e7259c5e7c2 // indirect
 	golang.org/x/xerrors v0.0.0-20191011141410-1b5146add898
 	google.golang.org/appengine v1.6.5 // indirect
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 	gopkg.in/go-playground/validator.v9 v9.30.0
-	gopkg.in/ini.v1 v1.48.0 // indirect
+	gopkg.in/ini.v1 v1.49.0 // indirect
 	xorm.io/core v0.7.2 // indirect
 )
