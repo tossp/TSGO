@@ -43,7 +43,7 @@ func StartGorm() (err error) {
 	//db.LogMode(false)
 	g = db
 
-	go gPing()
+	gPing()
 	return
 }
 
@@ -74,7 +74,6 @@ func gPing() {
 		log.Error(errors.Wrap(err, "gorm数据库同步失败"))
 		return
 	}
-	//autoMigrate()
 }
 
 func AddGormTables(t ...interface{}) {

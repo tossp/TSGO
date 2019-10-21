@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/tossp/tsgo/pkg/log"
-    "github.com/tossp/tsgo/pkg/null"
-    "github.com/tossp/tsgo/pkg/setting"
+	"github.com/tossp/tsgo/pkg/null"
+	"github.com/tossp/tsgo/pkg/setting"
 	"github.com/tossp/tsgo/pkg/utils/crypto"
 
 	jwt "github.com/dgrijalva/jwt-go"
@@ -23,7 +23,7 @@ const (
 
 type IUser interface {
 	New() IUser
-	GetByID( null.UUID) error
+	GetByID(null.UUID) error
 	ID() null.UUID
 }
 

@@ -7,9 +7,9 @@ import (
 	"sync"
 
 	"github.com/tossp/tsgo/pkg/log"
-    "github.com/tossp/tsgo/pkg/null"
+	"github.com/tossp/tsgo/pkg/null"
 
-    enLocales "github.com/go-playground/locales/en"
+	enLocales "github.com/go-playground/locales/en"
 	zhLocales "github.com/go-playground/locales/zh"
 	ut "github.com/go-playground/universal-translator"
 	validator "gopkg.in/go-playground/validator.v9"

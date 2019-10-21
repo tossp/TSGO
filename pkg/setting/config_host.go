@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/spf13/viper"
+	"github.com/tossp/tsgo/pkg/utils/crypto"
 )
 
 type Server struct {
@@ -28,4 +29,8 @@ func GetServers() (data map[string]*Server) {
 		}
 	}
 	return
+}
+
+func GetGlobalPubKey() string {
+	return crypto.HexEncode(crypto.FromECDSAPub(&globalKey.PublicKey))
 }

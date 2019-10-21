@@ -39,8 +39,9 @@ func (s String) ValueOrZero() string {
 	return s.String
 }
 func (s String) GoString() string {
-    return s.ValueOrZero()
+	return s.ValueOrZero()
 }
+
 // NewString creates a new String
 func NewString(s string, valid bool) String {
 	return String{
