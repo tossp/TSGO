@@ -28,10 +28,12 @@ run: build
 	@${BINARY}
 
 debug:
+	@echo " > exec debug..."
 	@${GOBUILD} -gcflags "all=-N -l" ./cmd/app
 	@dlv --listen=:2345 --headless=true --api-version=2 exec ${BINARY}
 
 list:
+	@echo " > list..."
 	@echo ${PACKAGES}
 	@echo ${VETPACKAGES}
 	@echo ${GOFILES}
@@ -49,11 +51,14 @@ test:
 	@go test -cpu=1,2,4 -v -tags integration ./...
 
 up: fmt
+	@echo " > go update..."
 	@go get -u all
 	@go mod tidy
 
 vet:
+	@echo " > go vet..."
 	@go vet $(VETPACKAGES)
 
 clean:
+	@echo " > clean..."
 	@if [ -f ${BINARY} ] ; then rm ${BINARY} ; fi

@@ -2,9 +2,9 @@ package utils
 
 import (
 	"archive/zip"
-	"fmt"
 	"io"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -29,9 +29,9 @@ func Zip(dst, src string) (err error) {
 			log.Fatalln(err)
 		}
 	}()
-
+	dir, _ := path.Split(filepath.ToSlash(src))
 	// 下面来将文件写入 zw ，因为有可能会有很多个目录及文件，所以递归处理
-	return filepath.Walk(src, func(path string, fi os.FileInfo, errBack error) (err error) {
+	return filepath.Walk(src, func(p string, fi os.FileInfo, errBack error) (err error) {
 		if errBack != nil {
 			return errBack
 		}
@@ -42,13 +42,12 @@ func Zip(dst, src string) (err error) {
 			return
 		}
 
-		// 替换文件信息中的文件名
-		fh.Name = strings.TrimPrefix(path, string(filepath.Separator))
-
-		// 这步开始没有加，会发现解压的时候说它不是个目录
+		// 整理打包路径
+		fh.Name = strings.TrimPrefix(strings.TrimPrefix(filepath.ToSlash(p), dir), string(filepath.Separator))
 		if fi.IsDir() {
-			fh.Name += "/"
+			fh.Name += string(filepath.Separator)
 		}
+		fh.Name = filepath.ToSlash(fh.Name)
 
 		// 写入文件信息，并返回一个 Write 结构
 		w, err := zw.CreateHeader(fh)
@@ -63,7 +62,7 @@ func Zip(dst, src string) (err error) {
 		}
 
 		// 打开要压缩的文件
-		fr, err := os.Open(path)
+		fr, err := os.Open(p)
 		if err != nil {
 			return
 		}
@@ -73,13 +72,10 @@ func Zip(dst, src string) (err error) {
 		}()
 
 		// 将打开的文件 Copy 到 w
-		n, err := io.Copy(w, fr)
+		_, err = io.Copy(w, fr)
 		if err != nil {
 			return
 		}
-		// 输出压缩的内容
-		fmt.Printf("成功压缩文件： %s, 共写入了 %d 个字符的数据\n", path, n)
-
 		return nil
 	})
 }
@@ -111,10 +107,10 @@ func UnZip(dst, src string) (err error) {
 	return nil
 }
 func unZipLoop(dst string, file *zip.File) (err error) {
-	path := filepath.Join(dst, file.Name)
+	p := filepath.Join(dst, file.Name)
 	// 如果是目录，就创建目录
 	if file.FileInfo().IsDir() {
-		if err = os.MkdirAll(path, file.Mode()); err != nil {
+		if err = os.MkdirAll(p, file.Mode()); err != nil {
 			return
 		}
 		// 因为是目录，跳过当前循环，因为后面都是文件的处理
@@ -131,18 +127,16 @@ func unZipLoop(dst string, file *zip.File) (err error) {
 	}()
 
 	// 创建要写出的文件对应的 Write
-	fw, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR|os.O_TRUNC, file.Mode())
+	fw, err := os.OpenFile(p, os.O_CREATE|os.O_RDWR|os.O_TRUNC, file.Mode())
 	if err != nil {
 		return err
 	}
 	defer func() {
 		_ = fw.Close()
 	}()
-	n, err := io.Copy(fw, fr)
+	_, err = io.Copy(fw, fr)
 	if err != nil {
 		return err
 	}
-	// 将解压的结果输出
-	fmt.Printf("成功解压 %s ，共写入了 %d 个字符的数据\n", path, n)
 	return
 }

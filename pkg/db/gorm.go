@@ -43,7 +43,7 @@ func StartGorm() (err error) {
 	//db.LogMode(false)
 	g = db
 
-	gPing()
+	go gPing()
 	return
 }
 
