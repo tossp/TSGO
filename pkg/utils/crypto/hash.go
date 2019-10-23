@@ -5,6 +5,8 @@ import (
 	"crypto/sha1"
 	"crypto/sha256"
 	"crypto/sha512"
+	"io"
+	"os"
 
 	"golang.org/x/crypto/argon2"
 	"golang.org/x/crypto/pbkdf2"
@@ -13,20 +15,20 @@ import (
 func Sha1(input []byte) []byte {
 	hmac1 := hmac.New(sha1.New, []byte("TossP.com"))
 	hmac1.Write(input)
-	bs := hmac1.Sum(nil)
-	return bs[:]
+	bs := hmac1.Sum(nil)[:]
+	return bs
 }
 func Sha256(input []byte) []byte {
 	hmac256 := hmac.New(sha256.New, []byte("TossP.com"))
 	hmac256.Write(input)
-	bs := hmac256.Sum(nil)
-	return bs[:]
+	bs := hmac256.Sum(nil)[:]
+	return bs
 }
 func Sha512(input []byte) []byte {
 	hmac512 := hmac.New(sha512.New, []byte("TossP.com"))
 	hmac512.Write(input)
-	bs := hmac512.Sum(nil)
-	return bs[:]
+	bs := hmac512.Sum(nil)[:]
+	return bs
 }
 
 func Hash32(password, salt []byte) []byte {
@@ -41,4 +43,25 @@ func HashSha(input, salt []byte, keylen int) (key []byte) {
 }
 func HashArgon(input, salt []byte, keylen uint32) (key []byte) {
 	return argon2.Key(input, Sha512(salt), 4, 32*1024, 3, keylen)
+}
+
+func HashFile(filename string) (bs []byte, err error) {
+	file, err := os.Open(filename)
+	if err != nil {
+		return
+	}
+	defer func() {
+		_ = file.Close()
+	}()
+	bs, err = HashReader(file)
+	return
+}
+
+func HashReader(file io.Reader) (bs []byte, err error) {
+	hash := hmac.New(sha512.New, []byte("TossP.com"))
+	if _, err = io.Copy(hash, file); err != nil {
+		return
+	}
+	bs = hash.Sum(nil)[:]
+	return
 }

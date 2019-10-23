@@ -59,3 +59,11 @@ func UseDataPath(elem ...string) string {
 func UseConfigPath(elem ...string) string {
 	return joinPath(viper.GetString(ConfigDirKey), elem...)
 }
+
+func GetGlobalPubKey() string {
+	return crypto.HexEncode(crypto.FromECDSAPub(&globalKey.PublicKey))
+}
+
+func GetGlobalKey() *ecdsa.PrivateKey {
+	return globalKey
+}

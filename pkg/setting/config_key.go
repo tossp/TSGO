@@ -8,7 +8,7 @@ import (
 
 var ()
 
-func GetKeyPass() string {
+func GetKeyPass() (string, error) {
 	return deKeyPass(viper.GetString("control.pass"))
 }
 
@@ -23,7 +23,8 @@ func enKeyPass(pass string) string {
 	return pass
 }
 
-func deKeyPass(pass string) string {
-	pass = string(crypto.AesDecrypt(crypto.HexDecode(pass), globalAseKey))
-	return pass
+func deKeyPass(pass string) (plantText string, err error) {
+	data, err := crypto.AesDecrypt(crypto.HexDecode(pass), globalAseKey)
+	plantText = string(data)
+	return
 }

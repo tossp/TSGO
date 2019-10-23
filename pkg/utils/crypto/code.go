@@ -60,7 +60,9 @@ func GzipDecode(in []byte) ([]byte, error) {
 		var out []byte
 		return out, err
 	}
-	defer reader.Close()
+	defer func() {
+		_ = reader.Close()
+	}()
 
 	return ioutil.ReadAll(reader)
 }

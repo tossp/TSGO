@@ -199,3 +199,6 @@ func (u UUID) NamespaceZH() uuid.UUID {
 func NewUuidV4() uuid.UUID {
 	return uuid.NewV4()
 }
+func NewUuidV5(ns uuid.UUID, name string) uuid.UUID {
+	return uuid.NewV5(ns, name)
+}
