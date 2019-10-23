@@ -17,20 +17,37 @@ func StGorm(c echo.Context, obj interface{}, omit ...string) (data map[string]in
 	if err = mustPtrStruct(obj); err != nil {
 		return
 	}
+	var m = db.G()
+	if ex, ok := c.Get(stGormSetKey).([]*ExSet); ok {
+		for _, v := range ex {
+			m.Set(v.Name, v.Value)
+		}
+	}
+
+	if len(omit) == 0 {
+		m = m.Model(obj)
+	} else {
+		m = m.Model(obj).Omit(omit...)
+	}
+
 	orgPi := c.QueryParam("pi")          //分页数
 	orgPs := c.QueryParam("ps")          //每页数量
 	orgSort := c.QueryParam("sort")      //排序
 	filter := make(map[string]string, 0) //筛选
-	for _, v := range getFieldName(obj) {
-		tmp := c.QueryParam(v)
+	for _, v := range getFieldName2(obj) {
+		tmp := c.QueryParam(v.Name)
 		if tmp == "" {
 			continue
 		}
-		if tmp == "descend" || tmp == "ascend" {
-			// TODO 单项排序的处理逻辑
+		if tmp == "ascend" {
+			m = m.Order(v.DBName)
 			continue
 		}
-		filter[v] = c.QueryParam(v)
+		if tmp == "descend" {
+			m = m.Order(fmt.Sprintf("%s desc", v.DBName))
+			continue
+		}
+		filter[v.DBName] = c.QueryParam(v.Name)
 	}
 	if exfilter, ok := c.Get(stFilterKey).([]string); ok {
 		for _, v := range exfilter {
@@ -53,12 +70,6 @@ func StGorm(c echo.Context, obj interface{}, omit ...string) (data map[string]in
 	}
 	if ps > 1000 {
 		ps = 1000
-	}
-	var m *gorm.DB
-	if len(omit) == 0 {
-		m = db.G().Model(obj)
-	} else {
-		m = db.G().Model(obj).Omit(omit...)
 	}
 
 	//multiSort := strings.Split(orgSort, "-")
@@ -133,7 +144,7 @@ func makeGorm(sess *gorm.DB, orgSort string, filter map[string]string) *gorm.DB 
 			continue
 		}
 		for _, v := range tmp {
-			sess = sess.Where(fmt.Sprintf("%s = ?", utils.GonicCasedName(k)), v)
+			sess = sess.Where(fmt.Sprintf("%s = ?", k), v)
 		}
 	}
 	return sess

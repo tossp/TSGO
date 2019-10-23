@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/jinzhu/gorm"
 	"github.com/tossp/tsgo/pkg/errors"
 	"github.com/tossp/tsgo/pkg/log"
+	"github.com/tossp/tsgo/pkg/utils"
 
 	"github.com/labstack/echo/v4"
 )
@@ -18,6 +20,7 @@ const (
 	stOrderKey       = "StOrder"
 	stOmitKey        = "StOmit"
 	stAssociationKey = "StAssociation"
+	stGormSetKey     = "StGormSetKey"
 )
 
 //获取结构体中字段的名称
@@ -36,6 +39,13 @@ func getFieldName(structName interface{}) []string {
 		result = append(result, t.Field(i).Name)
 	}
 	return result
+}
+
+//获取结构体中字段的名称
+func getFieldName2(structName interface{}) (fields []*gorm.StructField) {
+	scope := &gorm.Scope{Value: structName}
+	fields = scope.GetStructFields()[:]
+	return
 }
 
 func mustPtrStruct(structName interface{}) (err error) {
@@ -76,7 +86,7 @@ func Makefilter(c echo.Context, key, v string) {
 	if exfilter, ok := c.Get(stFilterKey).([]string); ok {
 		tmp = exfilter
 	}
-	tmp = append(tmp, fmt.Sprintf("%s:%s", key, v))
+	tmp = append(tmp, fmt.Sprintf("%s:%s", utils.GonicCasedName(key), v))
 	c.Set(stFilterKey, tmp)
 }
 
@@ -161,4 +171,21 @@ func MakeOmit(c echo.Context, columns ...string) {
 		Columns: columns,
 	})
 	c.Set(stOmitKey, tmp)
+}
+
+type ExSet struct {
+	Name  string
+	Value interface{}
+}
+
+func MakeSet(c echo.Context, name string, value interface{}) {
+	tmp := make([]*ExSet, 0)
+	if ex, ok := c.Get(stGormSetKey).([]*ExSet); ok {
+		tmp = ex
+	}
+	tmp = append(tmp, &ExSet{
+		Name:  name,
+		Value: value,
+	})
+	c.Set(stGormSetKey, tmp)
 }
