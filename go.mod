@@ -37,11 +37,11 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.4.0
-	github.com/ugorji/go v1.1.7 // indirect
+	github.com/ugorji/go/codec v1.1.7 // indirect
 	github.com/valyala/fasttemplate v1.1.0 // indirect
 	golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550
 	golang.org/x/net v0.0.0-20191021144547-ec77196f6094 // indirect
-	golang.org/x/sys v0.0.0-20191020212454-3e7259c5e7c2 // indirect
+	golang.org/x/sys v0.0.0-20191023151326-f89234f9a2c2 // indirect
 	golang.org/x/xerrors v0.0.0-20191011141410-1b5146add898
 	google.golang.org/appengine v1.6.5 // indirect
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
