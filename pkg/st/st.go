@@ -1,4 +1,4 @@
-package ngAlain
+package st
 
 import (
 	"fmt"
