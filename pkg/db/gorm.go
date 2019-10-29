@@ -22,7 +22,7 @@ var (
 func StartGorm() (err error) {
 	log.Info("开始初始化 gorm")
 	gorm.DefaultTableNameHandler = func(db *gorm.DB, defaultTableName string) string {
-		return fmt.Sprintf("%s_%s", setting.DbPrefix(), defaultTableName)
+		return TableName(defaultTableName)
 	}
 	db, err := gorm.Open("postgres", fmt.Sprintf(
 		"postgres://%s:%s@%s:%d/%s?sslmode=%s&fallback_application_name=%s&Schema",
@@ -49,6 +49,9 @@ func StartGorm() (err error) {
 
 func G() *gorm.DB {
 	return g
+}
+func TableName(defaultTableName string)string{
+    return fmt.Sprintf("%s_%s", setting.DbPrefix(), defaultTableName)
 }
 
 func autoMigrate() {
