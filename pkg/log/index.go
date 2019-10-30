@@ -46,7 +46,7 @@ func NewLog() (l *logger) {
 	}
 	l.SetFormatter(formatter)
 	//l.SetReportCaller(true)
-	//l.SetLevel(logrus.TraceLevel)
+	l.SetLevel(logrus.TraceLevel)
 	l.AddHook(hook)
 	l.Info("日志系统启动完成")
 	return
