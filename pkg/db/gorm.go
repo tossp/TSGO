@@ -50,8 +50,8 @@ func StartGorm() (err error) {
 func G() *gorm.DB {
 	return g
 }
-func TableName(defaultTableName string)string{
-    return fmt.Sprintf("%s_%s", setting.DbPrefix(), defaultTableName)
+func TableName(defaultTableName string) string {
+	return fmt.Sprintf("%s_%s", setting.DbPrefix(), defaultTableName)
 }
 
 func autoMigrate() {
