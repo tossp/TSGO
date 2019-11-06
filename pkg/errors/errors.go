@@ -2,7 +2,6 @@ package errors
 
 import (
 	"fmt"
-	"strings"
 
 	"golang.org/x/xerrors"
 )
@@ -101,9 +100,9 @@ type MessageError struct {
 	frame xerrors.Frame
 }
 
-func (e *MessageError) MarshalJSON() ([]byte, error) {
-	return []byte(`"` + strings.Replace(e.Error(), "\"", "\\\"", -1) + `"`), nil
-}
+//func (e *MessageError) MarshalJSON() ([]byte, error) {
+//	return []byte(fmt.Sprintf(`"%s"`,e.Error())), nil
+//}
 func (e *MessageError) Error() string {
 	return fmt.Sprint(e)
 }

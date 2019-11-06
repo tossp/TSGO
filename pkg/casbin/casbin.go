@@ -29,7 +29,7 @@ func Start() (err error) {
 	enforcer.EnableEnforce(setting.GetAccessControlEnable())
 	enforcer.EnableLog(true)
 	enforcer.EnableAutoSave(true)
-	enforcer.EnableAutoBuildRoleLinks(true)
+	//enforcer.EnableAutoBuildRoleLinks(true)
 	enforcer.StartAutoLoadPolicy(time.Minute * 5)
 	//err = enforcer.LoadPolicy()
 	return

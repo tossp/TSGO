@@ -6,13 +6,8 @@ import (
 	"reflect"
 	"sync"
 
-	"github.com/tossp/tsgo/pkg/log"
 	"github.com/tossp/tsgo/pkg/null"
-
-	enLocales "github.com/go-playground/locales/en"
-	zhLocales "github.com/go-playground/locales/zh"
-	ut "github.com/go-playground/universal-translator"
-	validator "gopkg.in/go-playground/validator.v9"
+	"gopkg.in/go-playground/validator.v9"
 	zhTrans "gopkg.in/go-playground/validator.v9/translations/zh"
 )
 
@@ -62,34 +57,50 @@ func (v *defaultValidator) Engine() interface{} {
 
 func (v *defaultValidator) lazyinit() {
 	v.once.Do(func() {
-		zH := zhLocales.New()
-		uni = ut.New(zH, zH, enLocales.New())
-		trans, has := FindTranslator("zh")
-		if !has {
-			log.Warn("验证翻译默认语种查找失败")
-		}
+		trans := FindTranslator("zh")
 		v.validator = validator.New()
 		v.validator.SetTagName("valid")
+		v.validator.RegisterTagNameFunc(func(fld reflect.StructField) string {
+			return fld.Tag.Get("desc")
+		})
 		_ = zhTrans.RegisterDefaultTranslations(v.validator, trans)
 		v.validator.RegisterCustomTypeFunc(ValidateDBType,
 			sql.NullString{}, sql.NullInt64{}, sql.NullInt64{}, sql.NullBool{}, sql.NullFloat64{},
-			null.String{}, null.Time{}, null.Int{}, null.Float{}, null.Bool{},
+			null.Bool{}, null.CIDR{}, null.Float{}, null.Int{}, null.IP{}, null.String{}, null.Time{}, null.UUID{},
 		)
 	})
+}
+func (v *defaultValidator) RegisterValidation(tag string, fn validator.Func, callValidationEvenIfNull ...bool) error {
+	v.lazyinit()
+	return v.validator.RegisterValidation(tag, fn, callValidationEvenIfNull...)
+}
+func (v *defaultValidator) RegisterTranslation(tag string, registerFn validator.RegisterTranslationsFunc, translationFn validator.TranslationFunc, locales ...string) error {
+	v.lazyinit()
+	trans := FindTranslator(locales...)
+	return v.validator.RegisterTranslation(tag, trans, registerFn, translationFn)
 }
 
 func New() *defaultValidator {
 	return &defaultValidator{}
 }
 
-func ValidateDBType(field reflect.Value) interface{} {
-	if valuer, ok := field.Interface().(driver.Valuer); ok {
-		val, err := valuer.Value()
+var nl = struct{}{}
+
+func ValidateDBType(field reflect.Value) (val interface{}) {
+	var err error
+	valuer, ok := field.Interface().(driver.Valuer)
+	if ok {
+		val, err = valuer.Value()
 		if err == nil {
-			return val
+			if val == nil {
+				return nl
+			} else {
+				return val
+			}
+
 		}
-		// handle the error how you want
 	}
+
 	return nil
 }
 

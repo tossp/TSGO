@@ -2,6 +2,7 @@ package db
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -24,15 +25,13 @@ func StartGorm() (err error) {
 	gorm.DefaultTableNameHandler = func(db *gorm.DB, defaultTableName string) string {
 		return TableName(defaultTableName)
 	}
-	db, err := gorm.Open("postgres", fmt.Sprintf(
+	dialect := fmt.Sprintf(
 		"postgres://%s:%s@%s:%d/%s?sslmode=%s&fallback_application_name=%s&Schema",
 		setting.DbUser(), setting.DbPassword(), setting.DbHost(), setting.DbPort(), setting.DbName(), setting.DbMode(), setting.AppName,
-	))
+	)
+	db, err := gorm.Open("postgres", dialect)
 	if err != nil {
-		panic("尝试连接数据库失败：" + fmt.Sprintf(
-			"postgres://%s:%s@%s:%d/%s?sslmode=%s&fallback_application_name=%s&Schema",
-			setting.DbUser(), "********", setting.DbHost(), setting.DbPort(), setting.DbName(), setting.DbMode(), setting.AppName,
-		))
+		panic("尝试连接数据库失败：" + strings.Replace(dialect, setting.DbPassword(), "******", -1))
 	}
 	db.LogMode(true)
 	db.DB().SetMaxIdleConns(setting.DbMaxIdleConns())

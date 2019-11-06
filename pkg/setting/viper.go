@@ -107,7 +107,7 @@ func write() {
 
 func defConfig() {
 	viper.SetDefault(DataDirKey, UseAppPath("data"))
-	viper.SetDefault(ConfigDirKey, UseAppPath("configs"))
+	viper.SetDefault(ConfigDirKey, UseConfigPath("configs"))
 	viper.SetDefault("secret", utils.GetRandomString(32))
 	viper.SetDefault("db.User", "ts")
 	viper.SetDefault("db.Password", "123456")
