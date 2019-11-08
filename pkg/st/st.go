@@ -8,8 +8,6 @@ import (
 	"github.com/tossp/tsgo/pkg/errors"
 	"github.com/tossp/tsgo/pkg/log"
 	"github.com/tossp/tsgo/pkg/utils"
-
-	"github.com/labstack/echo/v4"
 )
 
 const (
@@ -81,7 +79,7 @@ func makePtrSlice(structName interface{}) (objs interface{}, err error) {
 	return
 }
 
-func Makefilter(c echo.Context, key, v string) {
+func Makefilter(c Context, key, v string) {
 	var tmp []string
 	if exfilter, ok := c.Get(stFilterKey).([]string); ok {
 		tmp = exfilter
@@ -94,8 +92,15 @@ type ExPreload struct {
 	Column     string
 	Conditions []interface{}
 }
+type Context interface {
+	// Get retrieves data from the context.
+	Get(key string) interface{}
 
-func MakePreload(c echo.Context, column string, conditions ...interface{}) {
+	// Set saves data in the context.
+	Set(key string, val interface{})
+}
+
+func MakePreload(c Context, column string, conditions ...interface{}) {
 	tmp := make([]*ExPreload, 0)
 	if exPreload, ok := c.Get(stPreloadKey).([]*ExPreload); ok {
 		tmp = exPreload
@@ -112,7 +117,7 @@ type ExRelated struct {
 	ForeignKeys []string
 }
 
-func MakeRelated(c echo.Context, value interface{}, foreignKeys ...string) {
+func MakeRelated(c Context, value interface{}, foreignKeys ...string) {
 	tmp := make([]*ExRelated, 0)
 	if exPreload, ok := c.Get(stRelatedKey).([]*ExRelated); ok {
 		tmp = exPreload
@@ -129,7 +134,7 @@ type ExWhere struct {
 	Args  []interface{}
 }
 
-func MakeWhere(c echo.Context, query interface{}, args ...interface{}) {
+func MakeWhere(c Context, query interface{}, args ...interface{}) {
 	tmp := make([]*ExWhere, 0)
 	if ex, ok := c.Get(stWhereKey).([]*ExWhere); ok {
 		tmp = ex
@@ -146,7 +151,7 @@ type ExOrder struct {
 	Reorder []bool
 }
 
-func MakeOrder(c echo.Context, value interface{}, reorder ...bool) {
+func MakeOrder(c Context, value interface{}, reorder ...bool) {
 	tmp := make([]*ExOrder, 0)
 	if ex, ok := c.Get(stOrderKey).([]*ExOrder); ok {
 		tmp = ex
@@ -162,7 +167,7 @@ type ExOmit struct {
 	Columns []string
 }
 
-func MakeOmit(c echo.Context, columns ...string) {
+func MakeOmit(c Context, columns ...string) {
 	tmp := make([]*ExOmit, 0)
 	if ex, ok := c.Get(stOmitKey).([]*ExOmit); ok {
 		tmp = ex
@@ -178,7 +183,7 @@ type ExSet struct {
 	Value interface{}
 }
 
-func MakeSet(c echo.Context, name string, value interface{}) {
+func MakeSet(c Context, name string, value interface{}) {
 	tmp := make([]*ExSet, 0)
 	if ex, ok := c.Get(stGormSetKey).([]*ExSet); ok {
 		tmp = ex

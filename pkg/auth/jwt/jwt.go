@@ -9,7 +9,7 @@ import (
 	"github.com/tossp/tsgo/pkg/setting"
 	"github.com/tossp/tsgo/pkg/utils/crypto"
 
-	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/dgrijalva/jwt-go"
 )
 
 const (
@@ -25,6 +25,7 @@ type IUser interface {
 	New() IUser
 	GetByID(null.UUID) error
 	ID() null.UUID
+	HasAdmin() bool
 }
 
 type user struct{}
@@ -37,6 +38,9 @@ func (m *user) GetByID(id null.UUID) error {
 	panic("请使用 jwt.SetUserMode 初始化默认用户接口")
 }
 func (m *user) ID() null.UUID {
+	panic("请使用 jwt.SetUserMode 初始化默认用户接口")
+}
+func (m *user) HasAdmin() bool {
 	panic("请使用 jwt.SetUserMode 初始化默认用户接口")
 }
 

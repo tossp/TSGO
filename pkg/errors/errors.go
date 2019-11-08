@@ -13,6 +13,7 @@ var (
 	As                = xerrors.As
 	Unwrap            = xerrors.Unwrap // 获取内层错误
 	DbMsg             = "服务器错误"
+	Casbin            = "权限系统错误"
 	ErrForbidden      = New("禁止访问")
 	ErrNotFound       = New("资源不存在")
 	ErrBadRequest     = New("请求无效")

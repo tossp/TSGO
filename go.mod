@@ -39,7 +39,7 @@ require (
 	github.com/spf13/viper v1.5.0
 	github.com/ugorji/go/codec v1.1.7 // indirect
 	github.com/valyala/fasttemplate v1.1.0 // indirect
-	golang.org/x/crypto v0.0.0-20191105034135-c7e5f84aec59
+	golang.org/x/crypto v0.0.0-20191107222254-f4817d981bb6
 	golang.org/x/net v0.0.0-20191105084925-a882066a44e0 // indirect
 	golang.org/x/sys v0.0.0-20191105231009-c1f44814a5cd // indirect
 	golang.org/x/xerrors v0.0.0-20191011141410-1b5146add898

@@ -9,8 +9,10 @@ import (
 )
 
 const (
-	authErrKey  = "claims.err"
-	authUserKey = "claims.me"
+	authErrKey       = "claims.err"
+	authUserKey      = "claims.me"
+	authorityKey     = "casbin.authority"
+	authorityTextKey = "casbin.authority.text"
 )
 
 //EchoAuth jwt注入鉴定
