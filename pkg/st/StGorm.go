@@ -24,10 +24,8 @@ func StGorm(c echo.Context, obj interface{}, omit ...string) (data map[string]in
 		}
 	}
 
-	if len(omit) == 0 {
-		m = m.Model(obj)
-	} else {
-		m = m.Model(obj).Omit(omit...)
+	if len(omit) > 0 {
+		m = m.Omit(omit...)
 	}
 
 	orgPi := c.QueryParam("pi")          //分页数
@@ -108,7 +106,11 @@ func StGorm(c echo.Context, obj interface{}, omit ...string) (data map[string]in
 		}
 	}
 	total := 0
-	if err = m.Count(&total).Offset(ps * (pi - 1)).Limit(ps).Find(objs).Error; err != nil {
+	if err = m.Model(obj).Count(&total).Error; err != nil {
+		err = errors.NewMessageError(err, 0, "获取列表数量错误")
+		return
+	}
+	if err = m.Offset(ps * (pi - 1)).Limit(ps).Find(objs).Error; err != nil {
 		err = errors.NewMessageError(err, 0, "获取列表错误")
 		return
 	}

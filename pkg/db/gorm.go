@@ -33,12 +33,11 @@ func StartGorm() (err error) {
 	if err != nil {
 		panic("尝试连接数据库失败：" + strings.Replace(dialect, setting.DbPassword(), "******", -1))
 	}
-	db.LogMode(true)
 	db.DB().SetMaxIdleConns(setting.DbMaxIdleConns())
 	db.DB().SetMaxOpenConns(setting.DbMaxOpenConns())
-	db.DB().SetConnMaxLifetime(time.Hour)
-
-	db.SetLogger(log.GetLogger())
+	db.DB().SetConnMaxLifetime(time.Minute * 15)
+	//db.LogMode(true)
+	//db.SetLogger(log.GetLogger())
 	//db.LogMode(false)
 	g = db
 
@@ -91,7 +90,7 @@ func gsync() (err error) {
 	gormTableLock.Lock()
 	defer gormTableLock.Unlock()
 
-	if err = g.AutoMigrate(dbGormTables...).Error; err != nil {
+	if err = g.Debug().AutoMigrate(dbGormTables...).Error; err != nil {
 		err = errors.Wrap(err, "同步数据库实体错误")
 		return
 	}
