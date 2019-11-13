@@ -74,12 +74,17 @@ func PresignedGetAttachment(objectPath string, filename string) (presignedURL *u
 	return
 }
 
-func PresignedGet(objectPath string, reqParams url.Values) (preURL *url.URL, err error) {
+func PresignedGet(objectPath string, reqParams url.Values, expiresDuration ...time.Duration) (preURL *url.URL, err error) {
+	expiresTime := expires * 2
+	if len(expiresDuration) == 1 {
+		expiresTime = expiresDuration[0]
+	}
 	if err = tryMinio(); err != nil {
 		return
 	}
-	// Generates a presigned url which expires in a day.
-	preURL, err = minioClient.PresignedGetObject(bucketName, objectPath, expires*2, reqParams)
+	reqParams.Add("response-cache-control", "private")
+	reqParams.Add("response-cache-control", "max-age=3600")
+	preURL, err = minioClient.PresignedGetObject(bucketName, objectPath, expiresTime, reqParams)
 	if err != nil {
 		err = errors.NewMessageError(err, 7100, "presignedGet 失败")
 		return

@@ -41,7 +41,6 @@ func Zip(dst, src string) (err error) {
 		if err != nil {
 			return
 		}
-
 		// 整理打包路径
 		fh.Name = strings.TrimPrefix(strings.TrimPrefix(filepath.ToSlash(p), dir), string(filepath.Separator))
 		if fi.IsDir() {
@@ -70,7 +69,6 @@ func Zip(dst, src string) (err error) {
 		defer func() {
 			_ = fr.Close()
 		}()
-
 		// 将打开的文件 Copy 到 w
 		_, err = io.Copy(w, fr)
 		if err != nil {
