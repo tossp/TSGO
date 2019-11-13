@@ -16,10 +16,7 @@ start:
 	case reflect.Array, reflect.Slice:
 		data = make([]interface{}, val.Len())
 		for i := 0; i < val.Len(); i++ {
-			if val.Index(i).Interface() != nil {
-				data = append(data, val.Index(i).Interface())
-			}
-
+			data[i] = val.Index(i).Interface()
 		}
 	case reflect.Ptr:
 		val = val.Elem()
