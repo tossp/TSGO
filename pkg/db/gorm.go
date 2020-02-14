@@ -53,11 +53,12 @@ func TableName(defaultTableName string) string {
 }
 
 func autoMigrate() {
-	for _, err := range g.Exec(`CREATE EXTENSION IF NOT EXISTS postgis;
-CREATE EXTENSION IF NOT EXISTS postgis_topology;
-CREATE EXTENSION IF NOT EXISTS fuzzystrmatch;
-CREATE EXTENSION IF NOT EXISTS postgis_tiger_geocoder;
-CREATE EXTENSION IF NOT EXISTS citext;
+	//CREATE EXTENSION IF NOT EXISTS postgis;
+	//CREATE EXTENSION IF NOT EXISTS postgis_topology;
+	//CREATE EXTENSION IF NOT EXISTS postgis_tiger_geocoder;
+	//CREATE EXTENSION IF NOT EXISTS fuzzystrmatch;
+	//CREATE EXTENSION IF NOT EXISTS citext;
+	for _, err := range g.Exec(`
 CREATE EXTENSION IF NOT EXISTS hstore;
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`).GetErrors() {
 		log.Warn("Gorm数据库插件集成失败", err)

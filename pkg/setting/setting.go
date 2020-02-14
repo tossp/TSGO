@@ -2,9 +2,11 @@ package setting
 
 import (
 	"crypto/ecdsa"
+	"fmt"
 	"os"
 	"path/filepath"
 
+	"github.com/tjfoc/gmsm/sm2"
 	"github.com/tossp/tsgo/pkg/utils/crypto"
 
 	"github.com/spf13/viper"
@@ -28,6 +30,7 @@ var (
 	appPath      string
 	globalKey    *ecdsa.PrivateKey
 	globalAseKey []byte
+	sm, _        = sm2.GenerateKey()
 )
 
 func init() {
@@ -62,6 +65,10 @@ func UseConfigPath(elem ...string) string {
 
 func GetGlobalPubKey() string {
 	return crypto.HexEncode(crypto.FromECDSAPub(&globalKey.PublicKey))
+}
+
+func GetJsGlobalPubKey() string {
+	return fmt.Sprintf("%s.%s", crypto.HexEncode(crypto.FromECDSAPub(&globalKey.PublicKey)), crypto.Base64Encode(crypto.FromsSm2Pub(&sm.PublicKey)))
 }
 
 func GetGlobalKey() *ecdsa.PrivateKey {

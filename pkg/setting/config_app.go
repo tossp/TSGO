@@ -7,3 +7,6 @@ import (
 func GetSecret() string {
 	return viper.GetString("secret")
 }
+func GetStaticPageURL() string {
+	return viper.GetString("static")
+}

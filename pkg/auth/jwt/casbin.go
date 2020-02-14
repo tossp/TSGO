@@ -7,6 +7,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/tossp/tsgo/pkg/casbin"
 	"github.com/tossp/tsgo/pkg/log"
+	"github.com/tossp/tsgo/pkg/utils/crypto"
 )
 
 func EchoEnforcer() echo.MiddlewareFunc {
@@ -27,7 +28,7 @@ func EchoEnforcer() echo.MiddlewareFunc {
 				return next(c)
 			} else if u.HasAdmin() {
 				c.Set(authorityKey, "ADMIN")
-				c.Response().Header().Set("x-ts-authority-admin", fmt.Sprintf("%s;%s", act, obj))
+				c.Response().Header().Set("x-ts-authority-admin", crypto.Base64Encode([]byte(fmt.Sprintf("%s;%s", act, obj))))
 				return next(c)
 			}
 			c.Set(authorityKey, "FAIL")

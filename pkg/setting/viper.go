@@ -32,10 +32,10 @@ m = (r.service == p.service || p.service=="*") && ( g(r.sub, p.sub) || p.sub=="*
 func config() {
 	defConfig()
 
-	viper.SetEnvPrefix("ts")
-	viper.AutomaticEnv()
-	_ = viper.BindEnv(DataDirKey)
-	_ = viper.BindEnv(ConfigDirKey)
+	//viper.SetEnvPrefix("ts")
+	//viper.AutomaticEnv()
+	//_ = viper.BindEnv(DataDirKey)
+	//_ = viper.BindEnv(ConfigDirKey)
 
 	flag.String(ConfigDirKey, viper.GetString(ConfigDirKey), "基础配置文件路径")
 	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
@@ -46,17 +46,17 @@ func config() {
 
 	viper.SetConfigName(configFileName)
 	viper.AddConfigPath(viper.GetString(ConfigDirKey))
-	viper.AddConfigPath(UseAppPath("configs"))
+	//viper.AddConfigPath(UseAppPath("configs"))
 	viper.AddConfigPath(appPath)
-	viper.AddConfigPath("$HOME/.ts_site")
-	viper.AddConfigPath(".")
-	configFN := joinPath(viper.GetString(ConfigDirKey), configFileName+".toml")
+	//viper.AddConfigPath("$HOME/.ts_site")
+	//viper.AddConfigPath(".")
 read:
 	err := viper.ReadInConfig()
 	if err != nil {
 		fmt.Printf("配置文件错误: %s\n", err)
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			f, fuck := os.OpenFile(configFN, os.O_RDONLY|os.O_CREATE, 0644)
+			configFN := joinPath(viper.GetString(ConfigDirKey), configFileName+".toml")
+			f, fuck := os.OpenFile(configFN, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 			if fuck != nil {
 				fmt.Printf("尝试修复配置文件错误: %s\n", fuck)
 				os.Exit(1)
@@ -74,7 +74,7 @@ read:
 func overwrite() {
 	viper.Set("accessControl.model", defAcm)
 	_ = os.MkdirAll(viper.GetString(DataDirKey), 0755)
-	_ = os.MkdirAll(viper.GetString(ConfigDirKey), 0755)
+	//_ = os.MkdirAll(viper.GetString(ConfigDirKey), 0755)
 }
 
 func watch() {
@@ -106,8 +106,8 @@ func write() {
 }
 
 func defConfig() {
-	viper.SetDefault(DataDirKey, UseAppPath("data"))
 	viper.SetDefault(ConfigDirKey, UseConfigPath("configs"))
+	viper.SetDefault(DataDirKey, UseAppPath("data"))
 	viper.SetDefault("secret", utils.GetRandomString(32))
 	viper.SetDefault("db.User", "ts")
 	viper.SetDefault("db.Password", "123456")
