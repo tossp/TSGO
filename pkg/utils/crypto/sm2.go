@@ -60,7 +60,7 @@ func FromsSm2Pub(pub *sm2.PublicKey) []byte {
 	if pub == nil || pub.X == nil || pub.Y == nil {
 		return nil
 	}
-	return elliptic.Marshal(P256Sm2(), pub.X, pub.Y)
+	return elliptic.Marshal(pub.Curve, pub.X, pub.Y)
 }
 
 // []byte -> 公钥
@@ -68,15 +68,16 @@ func ToSm2Pub(pub []byte) *sm2.PublicKey {
 	if len(pub) == 0 {
 		return nil
 	}
-	x, y := elliptic.Unmarshal(P256Sm2(), pub)
-	return &sm2.PublicKey{Curve: P256Sm2(), X: x, Y: y}
+	curve := P256Sm2()
+	x, y := elliptic.Unmarshal(curve, pub)
+	return &sm2.PublicKey{Curve: curve, X: x, Y: y}
 }
 
 // GenerateSm2SharedSecret 生成Sm2共享密钥
-func GenerateSm2SharedSecret(privKey *sm2.PrivateKey, pubKey *sm2.PublicKey) (key []byte) {
+func GenerateSm2SharedSecret(privKey *sm2.PrivateKey, pubKey *sm2.PublicKey) []byte {
 	x, _ := P256Sm2().ScalarMult(pubKey.X, pubKey.Y, privKey.D.Bytes())
-	key = x.Bytes()
-	return
+	k := Sha512(x.Bytes())[:]
+	return k[:]
 }
 
 func P256Sm2() elliptic.Curve {

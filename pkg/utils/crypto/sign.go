@@ -2,6 +2,7 @@ package crypto
 
 import (
 	"bytes"
+	c "crypto"
 	"crypto/ecdsa"
 	"crypto/rand"
 	"fmt"
@@ -30,6 +31,11 @@ func Sign(priv *ecdsa.PrivateKey, pt []byte) (sign []byte, err error) {
 	b.Write([]byte(`+`))
 	b.Write(ss)
 	return b.Bytes(), nil
+
+}
+
+func Sign2(signer c.Signer, pt []byte) (sign []byte, err error) {
+	return signer.Sign(rand.Reader, pt, nil)
 }
 
 //SignVer 签名验证

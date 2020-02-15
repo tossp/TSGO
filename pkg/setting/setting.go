@@ -30,7 +30,7 @@ var (
 	appPath      string
 	globalKey    *ecdsa.PrivateKey
 	globalAseKey []byte
-	sm, _        = sm2.GenerateKey()
+	gmKey        *sm2.PrivateKey
 )
 
 func init() {
@@ -42,6 +42,7 @@ func init() {
 	config()
 	watch()
 	globalKey = crypto.NewKeyWithKey([]byte(GetSecret()))
+	gmKey = crypto.NewSm2KeyWithKey([]byte(GetSecret()))
 	globalAseKey = crypto.GenerateSharedSecret(globalKey, &crypto.NewKeyWithKey([]byte("砼砼")).PublicKey)
 	if viper.GetString("control.pass") == "" {
 		SetKeyPass("tossp")
@@ -68,9 +69,13 @@ func GetGlobalPubKey() string {
 }
 
 func GetJsGlobalPubKey() string {
-	return fmt.Sprintf("%s.%s", crypto.HexEncode(crypto.FromECDSAPub(&globalKey.PublicKey)), crypto.Base64Encode(crypto.FromsSm2Pub(&sm.PublicKey)))
+	return fmt.Sprintf("%s|%s", crypto.Base64Encode(crypto.FromECDSAPub(&globalKey.PublicKey)), crypto.Base64Encode(crypto.FromsSm2Pub(&gmKey.PublicKey)))
 }
 
 func GetGlobalKey() *ecdsa.PrivateKey {
 	return globalKey
+}
+
+func GmKey() *sm2.PrivateKey {
+	return gmKey
 }

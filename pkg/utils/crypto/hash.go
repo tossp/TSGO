@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/tjfoc/gmsm/sm3"
 	"golang.org/x/crypto/argon2"
 	"golang.org/x/crypto/pbkdf2"
 )
@@ -37,6 +38,11 @@ func Hash32(password, salt []byte) []byte {
 
 func HashKey(input []byte, keylen int) (key []byte) {
 	return pbkdf2.Key(input, Sha1([]byte("TossP.com")), 1024, keylen, sha256.New)[:]
+}
+
+func GmHashKey(input []byte, keylen int) (key []byte) {
+	//return sm3.Sm3Sum(input)[:]
+	return pbkdf2.Key(sm3.Sm3Sum(input), Sha1([]byte("TossP.com")), 1024, keylen, sha256.New)[:]
 }
 func HashSha(input, salt []byte, keylen int) (key []byte) {
 	return pbkdf2.Key(input, Sha512(salt), 1024, keylen, sha512.New)[:]

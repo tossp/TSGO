@@ -95,10 +95,10 @@ func ToECDSAPub(pub []byte) *ecdsa.PublicKey {
 }
 
 // GenerateSharedSecret 生成共享密钥
-func GenerateSharedSecret(privKey *ecdsa.PrivateKey, pubKey *ecdsa.PublicKey) (key []byte) {
+func GenerateSharedSecret(privKey *ecdsa.PrivateKey, pubKey *ecdsa.PublicKey) []byte {
 	x, _ := P521().ScalarMult(pubKey.X, pubKey.Y, privKey.D.Bytes())
-	key = x.Bytes()
-	return
+	k := Sha512(x.Bytes())[:]
+	return k[:]
 }
 
 func M(privKey *ecdsa.PrivateKey) {

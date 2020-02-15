@@ -52,7 +52,7 @@ test:
 
 up: fmt
 	@echo " > go update..."
-	@go get -u ./...
+	@go get -u -v ./...
 	@go mod tidy
 
 vet:
