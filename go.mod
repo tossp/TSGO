@@ -3,6 +3,7 @@ module github.com/tossp/tsgo
 go 1.13
 
 require (
+	github.com/allegro/bigcache v1.2.1
 	github.com/casbin/casbin/v2 v2.1.2
 	github.com/denisenkom/go-mssqldb v0.0.0-20200206145737-bbfc9a55622e // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible

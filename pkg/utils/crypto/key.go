@@ -2,6 +2,7 @@ package crypto
 
 import (
 	"bytes"
+	"crypto"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
@@ -9,6 +10,9 @@ import (
 	"fmt"
 	"io"
 	"math/big"
+
+	"github.com/tjfoc/gmsm/sm2"
+	"github.com/tossp/tsgo/pkg/errors"
 )
 
 //NewKey 随机生成密钥
@@ -95,10 +99,45 @@ func ToECDSAPub(pub []byte) *ecdsa.PublicKey {
 }
 
 // GenerateSharedSecret 生成共享密钥
-func GenerateSharedSecret(privKey *ecdsa.PrivateKey, pubKey *ecdsa.PublicKey) []byte {
-	x, _ := P521().ScalarMult(pubKey.X, pubKey.Y, privKey.D.Bytes())
-	k := Sha512(x.Bytes())[:]
-	return k[:]
+func GenerateSharedSecret(priv crypto.PrivateKey, pub crypto.PublicKey, salt ...byte) ([]byte, error) {
+	var (
+		x1    *big.Int
+		y1    *big.Int
+		k     []byte
+		curve elliptic.Curve
+	)
+	switch key := priv.(type) {
+	case *ecdsa.PrivateKey:
+		k = key.D.Bytes()
+		pubKey, ok := pub.(*ecdsa.PublicKey)
+		if !ok {
+			fmt.Println("pub only support ecdsa.PublicKey point type")
+			return nil, errors.New("pub only support ecdsa.PublicKey point type")
+		}
+		x1 = pubKey.X
+		y1 = pubKey.Y
+		curve = pubKey.Curve
+	case *sm2.PrivateKey:
+		k = key.D.Bytes()
+		pubKey, ok := pub.(*sm2.PublicKey)
+		if !ok {
+			fmt.Println("pub only support sm2.PublicKey point type")
+			return nil, errors.New("pub only support sm2.PublicKey point type")
+		}
+		x1 = pubKey.X
+		y1 = pubKey.Y
+		curve = pubKey.Curve
+	default:
+		fmt.Println("priv only support ecdsa.PrivateKey and sm2.PrivateKey")
+		return nil, errors.New("priv only support ecdsa.PrivateKey and sm2.PrivateKey")
+	}
+
+	if salt == nil {
+		salt = []byte("TossP.com")
+	}
+	x, _ := curve.ScalarMult(x1, y1, k)
+	key := Sha512(append(x.Bytes(), salt...))[:]
+	return key[:], nil
 }
 
 func M(privKey *ecdsa.PrivateKey) {

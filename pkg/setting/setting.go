@@ -43,7 +43,7 @@ func init() {
 	watch()
 	globalKey = crypto.NewKeyWithKey([]byte(GetSecret()))
 	gmKey = crypto.NewSm2KeyWithKey([]byte(GetSecret()))
-	globalAseKey = crypto.GenerateSharedSecret(globalKey, &crypto.NewKeyWithKey([]byte("砼砼")).PublicKey)
+	globalAseKey, _ = crypto.GenerateSharedSecret(globalKey, &crypto.NewKeyWithKey([]byte("砼砼")).PublicKey)
 	if viper.GetString("control.pass") == "" {
 		SetKeyPass("tossp")
 	}

@@ -34,8 +34,8 @@ func Sign(priv *ecdsa.PrivateKey, pt []byte) (sign []byte, err error) {
 
 }
 
-func Sign2(signer c.Signer, pt []byte) (sign []byte, err error) {
-	return signer.Sign(rand.Reader, pt, nil)
+func Sign2(signer c.Signer, pt []byte, opts c.SignerOpts) (sign []byte, err error) {
+	return signer.Sign(rand.Reader, pt, opts)
 }
 
 //SignVer 签名验证

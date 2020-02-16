@@ -73,13 +73,6 @@ func ToSm2Pub(pub []byte) *sm2.PublicKey {
 	return &sm2.PublicKey{Curve: curve, X: x, Y: y}
 }
 
-// GenerateSm2SharedSecret 生成Sm2共享密钥
-func GenerateSm2SharedSecret(privKey *sm2.PrivateKey, pubKey *sm2.PublicKey) []byte {
-	x, _ := P256Sm2().ScalarMult(pubKey.X, pubKey.Y, privKey.D.Bytes())
-	k := Sha512(x.Bytes())[:]
-	return k[:]
-}
-
 func P256Sm2() elliptic.Curve {
 	return sm2.P256Sm2()
 }

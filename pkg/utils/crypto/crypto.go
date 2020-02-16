@@ -5,8 +5,10 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/ecdsa"
+	"encoding/asn1"
 	"errors"
 	"fmt"
+	"math/big"
 	"strings"
 	"time"
 
@@ -15,12 +17,14 @@ import (
 	"github.com/tossp/tsgo/pkg/utils"
 )
 
-func EccEncrypt(priv *ecdsa.PrivateKey, pub *ecdsa.PublicKey, plantText []byte) []byte {
-	return AesEncrypt(plantText, GenerateSharedSecret(priv, pub))
+func EccEncrypt(priv *ecdsa.PrivateKey, pub *ecdsa.PublicKey, plantText []byte, salt ...byte) []byte {
+	key, _ := GenerateSharedSecret(priv, pub, salt...)
+	return AesEncrypt(plantText, key)
 }
 
-func EccDecrypt(priv *ecdsa.PrivateKey, pub *ecdsa.PublicKey, cipherText []byte) ([]byte, error) {
-	return AesDecrypt(cipherText, GenerateSharedSecret(priv, pub))
+func EccDecrypt(priv *ecdsa.PrivateKey, pub *ecdsa.PublicKey, cipherText []byte, salt ...byte) ([]byte, error) {
+	key, _ := GenerateSharedSecret(priv, pub, salt...)
+	return AesDecrypt(cipherText, key)
 }
 
 func AesEncrypt(plainText, key []byte) []byte {
@@ -46,7 +50,6 @@ func AesDecrypt(cipherText, key []byte) (plantText []byte, err error) {
 				err = errors.New("Unknow panic")
 			}
 		}
-
 	}()
 
 	k := HashKey(key, 32)
@@ -57,12 +60,14 @@ func AesDecrypt(cipherText, key []byte) (plantText []byte, err error) {
 	return
 }
 
-func Sm2Encrypt(priv *sm2.PrivateKey, pub *sm2.PublicKey, plainText []byte) []byte {
-	return Sm4Encrypt(plainText, GenerateSm2SharedSecret(priv, pub))
+func Sm2Encrypt(priv *sm2.PrivateKey, pub *sm2.PublicKey, plainText []byte, salt ...byte) []byte {
+	key, _ := GenerateSharedSecret(priv, pub, salt...)
+	return Sm4Encrypt(plainText, key)
 }
 
-func Sm2Decrypt(priv *sm2.PrivateKey, pub *sm2.PublicKey, cipherText []byte) ([]byte, error) {
-	return Sm4Decrypt(cipherText, GenerateSm2SharedSecret(priv, pub))
+func Sm2Decrypt(priv *sm2.PrivateKey, pub *sm2.PublicKey, cipherText []byte, salt ...byte) ([]byte, error) {
+	key, _ := GenerateSharedSecret(priv, pub, salt...)
+	return Sm4Decrypt(cipherText, key)
 }
 
 func Sm4Encrypt(plainText, key []byte) []byte {
@@ -75,14 +80,27 @@ func Sm4Encrypt(plainText, key []byte) []byte {
 	return cryted
 }
 
-func Sm4Decrypt(cipherText, key []byte) ([]byte, error) {
+func Sm4Decrypt(cipherText, key []byte) (plantText []byte, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			//check exactly what the panic was and create error.
+			switch x := r.(type) {
+			case string:
+				err = errors.New(x)
+			case error:
+				err = x
+			default:
+				err = errors.New("Unknown panic")
+			}
+		}
+	}()
 	k := HashKey(key, sm4.BlockSize*2)
 	block, _ := sm4.NewCipher(k[:sm4.BlockSize])
 	blockMode := cipher.NewCBCDecrypter(block, k[sm4.BlockSize:sm4.BlockSize+block.BlockSize()])
-	origData := make([]byte, len(cipherText))
-	blockMode.CryptBlocks(origData, cipherText)
-	origData = UnPadding(origData)
-	return origData, nil
+	//origData := make([]byte, len(cipherText))
+	blockMode.CryptBlocks(cipherText, cipherText)
+	plantText = UnPadding(cipherText)
+	return
 }
 
 func Padding(ciphertext []byte, blockSize int) []byte {
@@ -100,28 +118,21 @@ func UnPadding(plantText []byte) []byte {
 func JsEncode(gmPriv *sm2.PrivateKey, eccPriv *ecdsa.PrivateKey, gmPub *sm2.PublicKey, eccPub *ecdsa.PublicKey, plainText string) (result map[string]string) {
 	once := utils.GetRandomString(32)
 	now := time.Now().Format(time.RFC3339Nano)
-	gmCipherText := Sm2Encrypt(gmPriv, gmPub, []byte(once+plainText+now))
-	eccCipherText := EccEncrypt(eccPriv, eccPub, gmCipherText)
-	//fmt.Println("GM密文", len(gmCipherText), Base64Encode(gmCipherText))
+	gmCipherText := Sm2Encrypt(gmPriv, gmPub, []byte(once+plainText+now), []byte(once)...)
+	eccCipherText := EccEncrypt(eccPriv, eccPub, gmCipherText, []byte(once)...)
 	cipherText := Base64Encode(eccCipherText)
-	//fmt.Println("ECC密文", len(eccCipherText), cipherText)
-
-	//eccCipherText, _ = Base64Decode(cipherText)
-	//eccPlainText, _ := EccDecrypt(eccPriv, eccPub, eccCipherText)
-	//gmPlainText, _ := Sm2Decrypt(gmPriv, gmPub, eccPlainText)
-	//fmt.Println("GM明文", len(gmPlainText), string(gmPlainText))
 
 	var (
 		sign      = ""
 		publicKey = fmt.Sprintf("%s|%s", Base64Encode(FromECDSAPub(&eccPriv.PublicKey)), Base64Encode(FromsSm2Pub(&gmPriv.PublicKey)))
 	)
-	gmSign, err := Sign2(gmPriv, []byte(once+cipherText+now))
+	gmSign, err := Sign2(gmPriv, []byte(now+cipherText+once), nil)
 	if err != nil {
 		fmt.Println("警告 gmSign", err.Error())
 	} else {
 		sign = Base64Encode(gmSign)
 	}
-	eccSign, err := Sign2(eccPriv, []byte(once+cipherText+now))
+	eccSign, err := Sign2(eccPriv, []byte(now+cipherText+once), nil)
 	if err != nil {
 		fmt.Println("警告 eccSign", err.Error())
 		sign = fmt.Sprintf("%s|%s", sign, "")
@@ -157,18 +168,17 @@ func JsDecode(gmPriv *sm2.PrivateKey, eccPriv *ecdsa.PrivateKey, opt *JsDecodeHe
 		err = errors.New("有效时间格式错误")
 		return
 	}
-	now := time.Now()
-	fmt.Println("JsDecode", now)
-	fmt.Println("JsDecode", now.Add(time.Minute*5))
-	fmt.Println("JsDecode", t)
-	fmt.Println("JsDecode", t.Sub(now))
-	if now.Before(t) {
+	if time.Now().Add(time.Minute * -1).After(t) {
 		err = errors.New("数据未生效")
 		return
 	}
-
-	if t.Sub(now) >= time.Minute*3 {
+	if time.Now().Add(time.Minute * 5).Before(t) {
 		err = errors.New("数据已过期")
+		return
+	}
+	sign := strings.Split(opt.Sign, "|")
+	if len(sign) != 2 {
+		err = errors.New("密钥格式错误")
 		return
 	}
 
@@ -194,17 +204,43 @@ func JsDecode(gmPriv *sm2.PrivateKey, eccPriv *ecdsa.PrivateKey, opt *JsDecodeHe
 		gmPub = ToSm2Pub(key)
 	}
 
+	s, err := Base64Decode(sign[0])
+	if err != nil {
+		err = errors.New("解码签名信息失败")
+		return
+	}
+	if !gmPub.Verify([]byte(opt.Time+opt.Cipher+opt.Once), s) {
+		err = errors.New("验证GM签名信息失败")
+		return
+	}
+	s, err = Base64Decode(sign[1])
+	if err != nil {
+		err = errors.New("解码ECC签名信息失败")
+		return
+	}
+	var esig struct {
+		R, S *big.Int
+	}
+	if _, err = asn1.Unmarshal(s, &esig); err != nil {
+		err = errors.New("序列化ECC签名信息失败")
+		return
+	}
+	if !ecdsa.Verify(eccPub, []byte(opt.Time+opt.Cipher+opt.Once), esig.R, esig.S) {
+		err = errors.New("验证ECC签名信息失败")
+		return
+	}
+
 	eccCipherText, err := Base64Decode(opt.Cipher)
 	if err != nil {
 		err = errors.New("解码密文错误")
 		return
 	}
-	eccPlainText, err := EccDecrypt(eccPriv, eccPub, eccCipherText)
+	eccPlainText, err := EccDecrypt(eccPriv, eccPub, eccCipherText, []byte(opt.Once)...)
 	if err != nil {
 		err = errors.New("ECC解密错误")
 		return
 	}
-	gmPlainText, err := Sm2Decrypt(gmPriv, gmPub, eccPlainText)
+	gmPlainText, err := Sm2Decrypt(gmPriv, gmPub, eccPlainText, []byte(opt.Once)...)
 	if err != nil {
 		err = errors.New("GM解密错误")
 		return
