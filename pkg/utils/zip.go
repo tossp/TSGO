@@ -26,7 +26,7 @@ func Zip(dst, src string) (err error) {
 	defer func() {
 		// 检测一下是否成功关闭
 		if err := zw.Close(); err != nil {
-			log.Fatalln(err)
+			log.Fatalw("关闭zip失败", "err", err)
 		}
 	}()
 	dir, _ := path.Split(filepath.ToSlash(src))

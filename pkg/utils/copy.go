@@ -21,13 +21,13 @@ func Copy(src, dest string) error {
 	if err != nil {
 		return err
 	}
-	return copy(src, dest, info)
+	return copyd(src, dest, info)
 }
 
 // copy dispatches copy-funcs according to the mode.
 // Because this "copy" could be called recursively,
 // "info" MUST be given here, NOT nil.
-func copy(src, dest string, info os.FileInfo) error {
+func copyd(src, dest string, info os.FileInfo) error {
 	if info.Mode()&os.ModeSymlink != 0 {
 		return lcopy(src, dest, info)
 	}
@@ -85,7 +85,7 @@ func dcopy(srcdir, destdir string, info os.FileInfo) error {
 
 	for _, content := range contents {
 		cs, cd := filepath.Join(srcdir, content.Name()), filepath.Join(destdir, content.Name())
-		if err := copy(cs, cd, content); err != nil {
+		if err := copyd(cs, cd, content); err != nil {
 			// If any error, exit immediately
 			return err
 		}

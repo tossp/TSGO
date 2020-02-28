@@ -2,9 +2,9 @@ package setting
 
 import (
 	"flag"
-	"fmt"
 	"os"
 
+	"github.com/tossp/tsgo/pkg/log"
 	"github.com/tossp/tsgo/pkg/utils"
 
 	"github.com/fsnotify/fsnotify"
@@ -53,22 +53,24 @@ func config() {
 read:
 	err := viper.ReadInConfig()
 	if err != nil {
-		fmt.Printf("配置文件错误: %s\n", err)
+		log.Warnf("配置文件错误: %s\n", err)
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 			configFN := joinPath(viper.GetString(ConfigDirKey), configFileName+".toml")
 			f, fuck := os.OpenFile(configFN, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 			if fuck != nil {
-				fmt.Printf("尝试修复配置文件错误: %s\n", fuck)
+				log.Warnf("尝试修复配置文件错误: %s\n", fuck)
 				os.Exit(1)
 			}
 			_ = f.Close()
-			fmt.Printf("修复配置: %s\n", configFN)
+			log.Warnf("修复配置: %s\n", configFN)
 			goto read
 		}
 		panic(err)
 	}
 	overwrite()
-	fmt.Printf("加载配置文件: %s\n", viper.ConfigFileUsed())
+	log.SetMode(IsDev())
+	log.Infow("加载配置文件成功", "filename", viper.ConfigFileUsed())
+
 	write()
 }
 func overwrite() {
@@ -80,13 +82,13 @@ func overwrite() {
 func watch() {
 	viper.WatchConfig()
 	viper.OnConfigChange(func(e fsnotify.Event) {
-		fmt.Println("配置发生变更：", e.Op.String())
+		log.Debug("配置发生变更：", e.Op.String())
 		oldConfig := viper.New()
 		for _, v := range viper.AllKeys() {
 			oldConfig.Set(v, viper.Get(v))
 		}
 		if err := viper.ReadInConfig(); err != nil {
-			fmt.Printf("重新加载配置文件错误: %s\n", viper.ConfigFileUsed())
+			log.Warnf("重新加载配置文件错误: %s", viper.ConfigFileUsed())
 			for _, v := range oldConfig.AllKeys() {
 				viper.Set(v, viper.Get(v))
 			}
@@ -94,14 +96,15 @@ func watch() {
 			return
 		}
 		overwrite()
-		fmt.Printf("重新加载配置文件: %s\n", viper.ConfigFileUsed())
+		log.SetMode(IsDev())
+		log.Infow("加载配置文件成功", "filename", viper.ConfigFileUsed())
 	})
 }
 
 func write() {
 	err := viper.WriteConfig()
 	if err != nil {
-		fmt.Printf("保存配置文件错误: %s\n", err)
+		log.Errorf("保存配置文件错误: %s\n", err)
 	}
 }
 
@@ -109,6 +112,7 @@ func defConfig() {
 	viper.SetDefault(ConfigDirKey, UseConfigPath("configs"))
 	viper.SetDefault(DataDirKey, UseAppPath("data"))
 	viper.SetDefault("secret", utils.GetRandomString(32))
+	viper.SetDefault("mod", "prod")
 	viper.SetDefault("db.User", "ts")
 	viper.SetDefault("db.Password", "123456")
 	viper.SetDefault("db.Prefix", "ts")

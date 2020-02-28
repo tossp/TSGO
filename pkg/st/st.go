@@ -28,7 +28,7 @@ func getFieldName(structName interface{}) []string {
 		t = t.Elem()
 	}
 	if t.Kind() != reflect.Struct {
-		log.Println("Check type error not Struct")
+		log.Warn("Check type error not Struct")
 		return []string{}
 	}
 	fieldNum := t.NumField()

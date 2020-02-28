@@ -14,7 +14,7 @@ import (
 
 	"github.com/tjfoc/gmsm/sm2"
 	"github.com/tjfoc/gmsm/sm4"
-	"github.com/tossp/tsgo/pkg/utils"
+	"golang.org/x/crypto/nacl/secretbox"
 )
 
 func EccEncrypt(priv *ecdsa.PrivateKey, pub *ecdsa.PublicKey, plantText []byte, salt ...byte) []byte {
@@ -28,10 +28,11 @@ func EccDecrypt(priv *ecdsa.PrivateKey, pub *ecdsa.PublicKey, cipherText []byte,
 }
 
 func AesEncrypt(plainText, key []byte) []byte {
-	k := HashKey(key, 32)
-	block, _ := aes.NewCipher(k) //选择加密算法
+	k1 := HashKey(key, 32)
+	block, _ := aes.NewCipher(k1) //选择加密算法
+	k2 := HashKey(k1, block.BlockSize())
 	plainText = Padding(plainText, block.BlockSize())
-	blockModel := cipher.NewCBCEncrypter(block, k[:block.BlockSize()])
+	blockModel := cipher.NewCBCEncrypter(block, k2)
 	ciphertext := make([]byte, len(plainText))
 	blockModel.CryptBlocks(ciphertext, plainText)
 	return ciphertext
@@ -52,9 +53,10 @@ func AesDecrypt(cipherText, key []byte) (plantText []byte, err error) {
 		}
 	}()
 
-	k := HashKey(key, 32)
-	block, _ := aes.NewCipher(k) //选择加密算法
-	blockModel := cipher.NewCBCDecrypter(block, k[:block.BlockSize()])
+	k1 := HashKey(key, 32)
+	block, _ := aes.NewCipher(k1) //选择加密算法
+	k2 := HashKey(k1, block.BlockSize())
+	blockModel := cipher.NewCBCDecrypter(block, k2)
 	blockModel.CryptBlocks(cipherText, cipherText)
 	plantText = UnPadding(cipherText)
 	return
@@ -71,10 +73,11 @@ func Sm2Decrypt(priv *sm2.PrivateKey, pub *sm2.PublicKey, cipherText []byte, sal
 }
 
 func Sm4Encrypt(plainText, key []byte) []byte {
-	k := HashKey(key, sm4.BlockSize*2)
-	block, _ := sm4.NewCipher(k[:sm4.BlockSize])
+	k1 := HashKey(key, sm4.BlockSize)
+	k2 := HashKey(k1, sm4.BlockSize)
+	block, _ := sm4.NewCipher(k1)
 	origData := Padding(plainText, block.BlockSize())
-	blockMode := cipher.NewCBCEncrypter(block, k[sm4.BlockSize:sm4.BlockSize+block.BlockSize()])
+	blockMode := cipher.NewCBCEncrypter(block, k2)
 	cryted := make([]byte, len(origData))
 	blockMode.CryptBlocks(cryted, origData)
 	return cryted
@@ -83,7 +86,7 @@ func Sm4Encrypt(plainText, key []byte) []byte {
 func Sm4Decrypt(cipherText, key []byte) (plantText []byte, err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			//check exactly what the panic was and create error.
+			//check exac数据已过期tly what the panic was and create error.
 			switch x := r.(type) {
 			case string:
 				err = errors.New(x)
@@ -94,9 +97,10 @@ func Sm4Decrypt(cipherText, key []byte) (plantText []byte, err error) {
 			}
 		}
 	}()
-	k := HashKey(key, sm4.BlockSize*2)
-	block, _ := sm4.NewCipher(k[:sm4.BlockSize])
-	blockMode := cipher.NewCBCDecrypter(block, k[sm4.BlockSize:sm4.BlockSize+block.BlockSize()])
+	k1 := HashKey(key, sm4.BlockSize)
+	k2 := HashKey(k1, sm4.BlockSize)
+	block, _ := sm4.NewCipher(k1)
+	blockMode := cipher.NewCBCDecrypter(block, k2)
 	//origData := make([]byte, len(cipherText))
 	blockMode.CryptBlocks(cipherText, cipherText)
 	plantText = UnPadding(cipherText)
@@ -109,14 +113,78 @@ func Padding(ciphertext []byte, blockSize int) []byte {
 	return append(ciphertext, padtext...)
 }
 
-func UnPadding(plantText []byte) []byte {
-	length := len(plantText)
-	unpadding := int(plantText[length-1])
-	return plantText[:(length - unpadding)]
+func UnPadding(origData []byte) []byte {
+	length := len(origData)
+	unpadding := int(origData[length-1])
+	return origData[:length-unpadding]
+}
+
+const (
+	secretboxKeySize   = 32
+	secretboxNonceSize = 24
+)
+
+var (
+	errGenNonce = errors.New("could not generate enough random bytes for nonce")
+	errKeyNonce = errors.New("incorrect key or nonce size")
+	errDecrypt  = errors.New("decryption failed")
+)
+
+func generateNonce() ([]byte, error) {
+	b, err := GenerateRandomBytes(secretboxNonceSize)
+	if err != nil || len(b) != secretboxNonceSize {
+		return nil, errGenNonce
+	}
+	return b, nil
+}
+
+func SecretboxEncrypt(input []byte, key []byte) []byte {
+	nonce, _ := generateNonce()
+
+	var nonceBytes [secretboxNonceSize]byte
+	copy(nonceBytes[:], nonce)
+
+	var keyBytes [secretboxKeySize]byte
+	copy(keyBytes[:], HashKey(key, secretboxKeySize))
+
+	return secretbox.Seal(nonce[:], input, &nonceBytes, &keyBytes)
+}
+
+/*
+Decrypt Decrypt (authenticated) a series of bytes given the secret key
+*/
+func SecretboxDecrypt(input []byte, key []byte) (plantText []byte, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			//check exac数据已过期tly what the panic was and create error.
+			switch x := r.(type) {
+			case string:
+				err = errors.New(x)
+			case error:
+				err = x
+			default:
+				err = errors.New("Unknown panic")
+			}
+		}
+	}()
+	var decryptNonce [secretboxNonceSize]byte
+	copy(decryptNonce[:], input[:secretboxNonceSize])
+
+	var keyBytes [secretboxKeySize]byte
+	copy(keyBytes[:], HashKey(key, secretboxKeySize))
+
+	cipherText := input[secretboxNonceSize:]
+
+	decrypted, ok := secretbox.Open(nil, cipherText, &decryptNonce, &keyBytes)
+	if !ok {
+		return nil, errDecrypt
+	}
+
+	return decrypted, nil
 }
 
 func JsEncode(gmPriv *sm2.PrivateKey, eccPriv *ecdsa.PrivateKey, gmPub *sm2.PublicKey, eccPub *ecdsa.PublicKey, plainText string) (result map[string]string) {
-	once := utils.GetRandomString(32)
+	once := GetRandomString(32)
 	now := time.Now().Format(time.RFC3339Nano)
 	gmCipherText := Sm2Encrypt(gmPriv, gmPub, []byte(once+plainText+now), []byte(once)...)
 	eccCipherText := EccEncrypt(eccPriv, eccPub, gmCipherText, []byte(once)...)
@@ -126,13 +194,13 @@ func JsEncode(gmPriv *sm2.PrivateKey, eccPriv *ecdsa.PrivateKey, gmPub *sm2.Publ
 		sign      = ""
 		publicKey = fmt.Sprintf("%s|%s", Base64Encode(FromECDSAPub(&eccPriv.PublicKey)), Base64Encode(FromsSm2Pub(&gmPriv.PublicKey)))
 	)
-	gmSign, err := Sign2(gmPriv, []byte(now+cipherText+once), nil)
+	gmSign, err := Sign2(gmPriv, []byte(now+plainText+once), nil)
 	if err != nil {
 		fmt.Println("警告 gmSign", err.Error())
 	} else {
 		sign = Base64Encode(gmSign)
 	}
-	eccSign, err := Sign2(eccPriv, []byte(now+cipherText+once), nil)
+	eccSign, err := Sign2(eccPriv, []byte(now+plainText+once), nil)
 	if err != nil {
 		fmt.Println("警告 eccSign", err.Error())
 		sign = fmt.Sprintf("%s|%s", sign, "")
@@ -204,32 +272,6 @@ func JsDecode(gmPriv *sm2.PrivateKey, eccPriv *ecdsa.PrivateKey, opt *JsDecodeHe
 		gmPub = ToSm2Pub(key)
 	}
 
-	s, err := Base64Decode(sign[0])
-	if err != nil {
-		err = errors.New("解码签名信息失败")
-		return
-	}
-	if !gmPub.Verify([]byte(opt.Time+opt.Cipher+opt.Once), s) {
-		err = errors.New("验证GM签名信息失败")
-		return
-	}
-	s, err = Base64Decode(sign[1])
-	if err != nil {
-		err = errors.New("解码ECC签名信息失败")
-		return
-	}
-	var esig struct {
-		R, S *big.Int
-	}
-	if _, err = asn1.Unmarshal(s, &esig); err != nil {
-		err = errors.New("序列化ECC签名信息失败")
-		return
-	}
-	if !ecdsa.Verify(eccPub, []byte(opt.Time+opt.Cipher+opt.Once), esig.R, esig.S) {
-		err = errors.New("验证ECC签名信息失败")
-		return
-	}
-
 	eccCipherText, err := Base64Decode(opt.Cipher)
 	if err != nil {
 		err = errors.New("解码密文错误")
@@ -246,5 +288,32 @@ func JsDecode(gmPriv *sm2.PrivateKey, eccPriv *ecdsa.PrivateKey, opt *JsDecodeHe
 		return
 	}
 	plainText = strings.TrimSuffix(strings.TrimPrefix(string(gmPlainText), opt.Once), opt.Time)
+
+	s, err := Base64Decode(sign[0])
+	if err != nil {
+		err = errors.New("解码签名信息失败")
+		return
+	}
+	if !gmPub.Verify([]byte(opt.Time+plainText+opt.Once), s) {
+		err = errors.New("验证GM签名信息失败")
+		return
+	}
+
+	s, err = Base64Decode(sign[1])
+	if err != nil {
+		err = errors.New("解码ECC签名信息失败")
+		return
+	}
+	var esig struct {
+		R, S *big.Int
+	}
+	if _, err = asn1.Unmarshal(s, &esig); err != nil {
+		err = errors.New("序列化ECC签名信息失败")
+		return
+	}
+	if !ecdsa.Verify(eccPub, []byte(opt.Time+plainText+opt.Once), esig.R, esig.S) {
+		err = errors.New("验证ECC签名信息失败")
+		return
+	}
 	return
 }

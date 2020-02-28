@@ -1,32 +1,22 @@
 package utils
 
 import (
-	"crypto/hmac"
-	"crypto/sha256"
-	"crypto/sha512"
-	"encoding/base64"
-
-	"golang.org/x/crypto/argon2"
-	"golang.org/x/crypto/pbkdf2"
+	"github.com/tossp/tsgo/pkg/utils/crypto"
 )
 
-func HashPasswd(password, salt string) string {
-	dk := argon2.IDKey(Sha512([]byte(password)), Sha512([]byte(salt)), 1, 32*1024, 4, 32)
-	pwd := base64.StdEncoding.EncodeToString(dk[:])
+func HashPasswd(password string) string {
+	pwd, _ := GenerateHash(password, "argon2")
 	return pwd
 }
-
-func Sha512(input []byte) []byte {
-	hmac512 := hmac.New(sha512.New, []byte("TossP.com"))
-	hmac512.Write(input)
-	bs := hmac512.Sum(nil)
-	return bs[:]
+func ComparePasswd(password, encodedHash string) (match bool, err error) {
+	return CompareHash(password, encodedHash, "argon2")
 }
 
-func Hash32(password, salt []byte) []byte {
-	return pbkdf2.Key(password, salt, 100, 32, sha256.New)[:]
+func GenerateHash(input, hasherName string) (string, error) {
+	hasher := crypto.GetHasher(hasherName)
+	return hasher.Generate(input)
 }
-
-func HashKey(input []byte, keylen int) (key []byte) {
-	return pbkdf2.Key(input, []byte("TossP.com"), 1024, keylen, sha256.New)[:]
+func CompareHash(input, encodedHash, hasherName string) (bool, error) {
+	hasher := crypto.GetHasher(hasherName)
+	return hasher.Compare(input, encodedHash)
 }
