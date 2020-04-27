@@ -15,6 +15,7 @@ import (
 const (
 	configFileName = "ts_config"
 	DataDirKey     = "DataDir"
+	LogDirKey      = "LogDir"
 	ConfigDirKey   = "ConfigDir"
 	AppName        = "TS_SITES"
 )

@@ -40,7 +40,7 @@ list:
 
 fmt:
 	@echo " > gofmt..."
-	@goimports -w ${GOFILES}
+	# @goimports -w ${GOFILES}
 	@go fmt ./...
 
 check: fmt

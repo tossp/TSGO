@@ -78,6 +78,8 @@ func Panic(args ...interface{}) {
 	z.Panic(args...)
 }
 
+// Panicw logs a message with some additional context, then panics. The
+// variadic key-value pairs are treated as they are in With.
 func Panicw(msg string, keysAndValues ...interface{}) {
 	z.Panicw(msg, keysAndValues...)
 }

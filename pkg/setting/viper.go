@@ -68,7 +68,7 @@ read:
 		panic(err)
 	}
 	overwrite()
-	log.SetMode(IsDev())
+	log.SetConfig(IsDev(), viper.GetString(LogDirKey))
 	log.Infow("加载配置文件成功", "filename", viper.ConfigFileUsed())
 
 	write()
@@ -96,7 +96,7 @@ func watch() {
 			return
 		}
 		overwrite()
-		log.SetMode(IsDev())
+		log.SetConfig(IsDev(), viper.GetString(LogDirKey))
 		log.Infow("加载配置文件成功", "filename", viper.ConfigFileUsed())
 	})
 }
@@ -111,6 +111,7 @@ func write() {
 func defConfig() {
 	viper.SetDefault(ConfigDirKey, UseConfigPath("configs"))
 	viper.SetDefault(DataDirKey, UseAppPath("data"))
+	viper.SetDefault(LogDirKey, UseAppPath("data", "logs"))
 	viper.SetDefault("secret", utils.GetRandomString(32))
 	viper.SetDefault("mod", "prod")
 	viper.SetDefault("db.User", "ts")

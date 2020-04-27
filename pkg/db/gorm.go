@@ -11,8 +11,10 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/pkg/errors"
+
+	//引入对postgres支持
+	_ "github.com/jinzhu/gorm/dialects/postgres"
 )
 
 var (
@@ -21,6 +23,7 @@ var (
 	dbGormTables  []interface{}
 )
 
+//StartGorm 启动GORM
 func StartGorm() (err error) {
 	log.Info("初始化数据模型")
 	gorm.DefaultTableNameHandler = func(db *gorm.DB, defaultTableName string) string {
@@ -45,9 +48,12 @@ func StartGorm() (err error) {
 	return
 }
 
+//G GORM实例
 func G() *gorm.DB {
 	return g
 }
+
+//TableName 计算表名
 func TableName(defaultTableName string) string {
 	return fmt.Sprintf("%s_%s", setting.DbPrefix(), defaultTableName)
 }
@@ -75,6 +81,7 @@ func gPing() {
 	}
 }
 
+//AddGormTables 添加同步表
 func AddGormTables(t ...interface{}) {
 	if len(t) == 0 {
 		return
@@ -87,7 +94,7 @@ func AddGormTables(t ...interface{}) {
 func gsync() (err error) {
 	gormTableLock.RLock()
 	defer gormTableLock.RUnlock()
-
+	defer log.Info("同步数据库实体过程结束")
 	if err = g.Debug().AutoMigrate(dbGormTables...).Error; err != nil {
 		log.Errorw("同步数据库实体错误", "err", err)
 		err = errors.Wrap(err, "同步数据库实体错误")
@@ -96,6 +103,7 @@ func gsync() (err error) {
 	return
 }
 
+//Logger 日志实体
 type Logger struct {
 	zap *zap.Logger
 }
@@ -104,6 +112,7 @@ func newLog(logger *zap.Logger) Logger {
 	return Logger{zap: logger}
 }
 
+//Print 打印信息
 func (l Logger) Print(values ...interface{}) {
 	if len(values) < 2 {
 		log.Warn("遗漏来源", values)

@@ -43,7 +43,7 @@ func EchoJwt(u IUser) echo.MiddlewareFunc {
 				c.Set(authUserKey, user)
 				expTime := time.Unix(claims.ExpiresAt, 0).Sub(time.Now())
 				if expTime > 0 && expTime < expHour/2 {
-					token := GenerateToken(user.ID(), time.Now())
+					_, token := GenerateToken(user.ID(), time.Now())
 					c.Response().Header().Add(echo.HeaderAuthorization, token)
 					c.SetCookie(&http.Cookie{Name: CookieKey, Value: token, HttpOnly: true})
 				}

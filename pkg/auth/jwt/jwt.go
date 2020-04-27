@@ -47,7 +47,7 @@ func setUserMode(u IUser) {
 }
 
 var (
-	tokenKey       = crypto.NewKeyWithKey([]byte(setting.GetSecret()))
+	tokenKey       = crypto.NewKeyWithKey([]byte(setting.GetSecret() + "TossP.com"))
 	defUser  IUser = new(user)
 )
 
@@ -57,8 +57,8 @@ type TsClaims struct {
 }
 
 //GenerateToken 生成Token
-func GenerateToken(id null.UUID, ct time.Time) (t string) {
-	claims := new(TsClaims)
+func GenerateToken(id null.UUID, ct time.Time) (claims *TsClaims, t string) {
+	claims = new(TsClaims)
 	claims.ExpiresAt = ct.Add(expHour).Unix()
 	claims.NotBefore = ct.Unix()
 
@@ -71,7 +71,6 @@ func GenerateToken(id null.UUID, ct time.Time) (t string) {
 	if err != nil {
 		log.Warn("生成token错误", err)
 	}
-	SessSet(id.String(), claims)
 	return
 }
 
@@ -98,15 +97,6 @@ func validJwt(auth string) (user IUser, claims *TsClaims, err error) {
 			return
 		}
 		if data, ok := t.Claims.(*TsClaims); ok && t.Valid {
-			if cs, has := SessGet(data.UserID.String()); !has {
-				err = fmt.Errorf("签名会话不存在")
-				return
-			} else if cs.Id != data.Id && data.VerifyNotBefore(time.Now().Add(time.Second*10).Unix(), true) {
-				// 新 token 10秒后完全生效旧 token 废止
-				err = fmt.Errorf("签名会话已过期")
-				return
-			}
-
 			user = defUser.New()
 			err = user.GetByID(data.UserID)
 			claims = data
