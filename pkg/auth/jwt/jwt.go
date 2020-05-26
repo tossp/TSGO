@@ -2,6 +2,7 @@ package jwt
 
 import (
 	"fmt"
+	"net"
 	"time"
 
 	"github.com/tossp/tsgo/pkg/log"
@@ -24,6 +25,8 @@ type IUser interface {
 	GetByID(null.UUID) error
 	ID() null.UUID
 	HasAdmin() bool
+	OnlineExtend(*TsClaims) error
+	OnlineCheck(*TsClaims, net.IP) error
 }
 
 type user struct{}
@@ -42,6 +45,13 @@ func (m *user) HasAdmin() bool {
 	panic("请使用 jwt.SetUserMode 初始化默认用户接口")
 }
 
+func (m *user) OnlineExtend(c *TsClaims) error {
+	panic("请使用 jwt.SetUserMode 初始化默认用户接口")
+}
+func (m *user) OnlineCheck(c *TsClaims, ip net.IP) error {
+	panic("请使用 jwt.SetUserMode 初始化默认用户接口")
+}
+
 func setUserMode(u IUser) {
 	defUser = u
 }
@@ -53,7 +63,23 @@ var (
 
 type TsClaims struct {
 	jwt.StandardClaims
-	UserID null.UUID `json:"user_id"`
+	UserID null.UUID `json:"usi,omitempty"`
+}
+
+//Extend 延期Token
+func (c *TsClaims) Extend(ct time.Time) *TsClaims {
+	c.ExpiresAt = ct.Add(expHour).Unix()
+	c.NotBefore = ct.Unix()
+	return c
+}
+
+//Extend 延期Token
+func (c *TsClaims) SignedString() (t string) {
+	t, err := jwt.NewWithClaims(jwt.SigningMethodES512, c).SignedString(tokenKey)
+	if err != nil {
+		log.Warn("生成token错误", err)
+	}
+	return
 }
 
 //GenerateToken 生成Token
@@ -61,6 +87,7 @@ func GenerateToken(id null.UUID, ct time.Time) (claims *TsClaims, t string) {
 	claims = new(TsClaims)
 	claims.ExpiresAt = ct.Add(expHour).Unix()
 	claims.NotBefore = ct.Unix()
+	claims.IssuedAt = time.Now().Unix()
 
 	claims.UserID = id
 	claims.Id = null.NewUuidV4().String()

@@ -1,6 +1,8 @@
 package jwt
 
 import (
+	"fmt"
+	"github.com/tossp/tsgo/pkg/utils"
 	"net/http"
 	"strings"
 	"time"
@@ -20,6 +22,11 @@ func EchoJwt(u IUser) echo.MiddlewareFunc {
 	setUserMode(u)
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
+			cc, ok := c.(utils.LikeContextLog)
+			if !ok {
+				c.Set(authErrKey, "utils.LikeContextLog 未注入")
+				return next(c)
+			}
 			// 跳过 WebSocket
 			if (c.Request().Header.Get(echo.HeaderUpgrade)) == "websocket" {
 				return next(c)
@@ -35,17 +42,31 @@ func EchoJwt(u IUser) echo.MiddlewareFunc {
 			if len(auth) > BearerLen+1 && auth[:BearerLen] == Bearer {
 				user, claims, err := validJwt(auth)
 				if err != nil {
+					cc.Log("令牌", fmt.Sprintf("校验错误 %v", err))
 					c.Set(authErrKey, err)
 					return next(c)
 				}
+				if err = user.OnlineCheck(claims, cc.Ip()); err != nil {
+					cc.Log("令牌", fmt.Sprintf("会话检查失败：%v", err))
+					c.Set(authErrKey, err)
+					return next(c)
+				}
+
 				c.Set("claims.exp", time.Unix(claims.ExpiresAt, 0))
 				c.Set("claims", claims)
 				c.Set(authUserKey, user)
 				expTime := time.Unix(claims.ExpiresAt, 0).Sub(time.Now())
-				if expTime > 0 && expTime < expHour/2 {
-					_, token := GenerateToken(user.ID(), time.Now())
-					c.Response().Header().Add(echo.HeaderAuthorization, token)
-					c.SetCookie(&http.Cookie{Name: CookieKey, Value: token, HttpOnly: true})
+				if expTime > 0 && expTime <= expHour/2 {
+					oldExpiresAt := time.Unix(claims.ExpiresAt, 0).String()
+					token := claims.Extend(time.Now()).SignedString()
+					if err = user.OnlineExtend(claims); err != nil {
+						cc.Log("令牌", fmt.Sprintf("延期失败：%v", err))
+					} else {
+						//c.Response().Header().Add(echo.HeaderAuthorization, token)
+						c.Response().Header().Add(XTseToken, token)
+						c.SetCookie(&http.Cookie{Name: CookieKey, Value: token, HttpOnly: true})
+						cc.Log("令牌", fmt.Sprintf("将在%s过期，延期到%s", oldExpiresAt, time.Unix(claims.ExpiresAt, 0).String()))
+					}
 				}
 				return next(c)
 			}
@@ -55,6 +76,7 @@ func EchoJwt(u IUser) echo.MiddlewareFunc {
 				goto AUTH
 			}
 			c.Set(authErrKey, "没有找到可用的token")
+			cc.Log("令牌", "没有找到可用的token")
 			return next(c)
 		}
 	}

@@ -14,7 +14,7 @@ VETPACKAGES=`go list ./... | grep -v /vendor/ | grep -v /examples/`
 GOFILES=`find . -name "*.go" -type f -not -path "./vendor/*"`
 BUILD_TIME=`date +%FT%T%z`
 LDFLAGS=-ldflags "-s -w -X github.com/tossp/tsgo/pkg/setting.ProjectName=$(PROJECTNAME) -X github.com/tossp/tsgo/pkg/setting.GitTag=$(GITTAG) -X github.com/tossp/tsgo/pkg/setting.GitVersion=${GITVERSION} -X github.com/tossp/tsgo/pkg/setting.BuildTime=${BUILD_TIME} -X github.com/tossp/tsgo/pkg/setting.BuildVersion=${VERSION}"
-GOBUILD=go build -tags=jsoniter
+GOBUILD=go build -trimpath -tags=jsoniter
 
 all: run
 

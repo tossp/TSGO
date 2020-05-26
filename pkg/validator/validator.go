@@ -6,9 +6,9 @@ import (
 	"reflect"
 	"sync"
 
+	"github.com/go-playground/validator/v10"
+	zhTrans "github.com/go-playground/validator/v10/translations/zh"
 	"github.com/tossp/tsgo/pkg/null"
-	"gopkg.in/go-playground/validator.v9"
-	zhTrans "gopkg.in/go-playground/validator.v9/translations/zh"
 )
 
 var (
@@ -80,12 +80,14 @@ func (v *defaultValidator) RegisterTranslation(tag string, registerFn validator.
 	return v.validator.RegisterTranslation(tag, trans, registerFn, translationFn)
 }
 
+//New 创建新的验证器
 func New() *defaultValidator {
 	return &defaultValidator{}
 }
 
 var nl = struct{}{}
 
+//ValidateDBType 验证数据库类型
 func ValidateDBType(field reflect.Value) (val interface{}) {
 	var err error
 	valuer, ok := field.Interface().(driver.Valuer)
@@ -94,9 +96,8 @@ func ValidateDBType(field reflect.Value) (val interface{}) {
 		if err == nil {
 			if val == nil {
 				return nl
-			} else {
-				return val
 			}
+			return val
 
 		}
 	}
