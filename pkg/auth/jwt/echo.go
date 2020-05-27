@@ -19,16 +19,17 @@ const (
 
 //EchoAuth jwt注入鉴定
 func EchoJwt(u IUser) echo.MiddlewareFunc {
-	setUserMode(u)
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
+
+			if (c.Request().Header.Get(echo.HeaderUpgrade)) == "websocket" || // 跳过 WebSocket
+				strings.Index(c.Request().URL.Path, "/v1/") != 0 { // 跳过 非验证模块
+				return next(c)
+			}
+
 			cc, ok := c.(utils.LikeContextLog)
 			if !ok {
 				c.Set(authErrKey, "utils.LikeContextLog 未注入")
-				return next(c)
-			}
-			// 跳过 WebSocket
-			if (c.Request().Header.Get(echo.HeaderUpgrade)) == "websocket" {
 				return next(c)
 			}
 			useCookie := false
@@ -40,7 +41,7 @@ func EchoJwt(u IUser) echo.MiddlewareFunc {
 			}
 		AUTH:
 			if len(auth) > BearerLen+1 && auth[:BearerLen] == Bearer {
-				user, claims, err := validJwt(auth)
+				user, claims, err := validJwt(u, auth)
 				if err != nil {
 					cc.Log("令牌", fmt.Sprintf("校验错误 %v", err))
 					c.Set(authErrKey, err)
@@ -56,7 +57,7 @@ func EchoJwt(u IUser) echo.MiddlewareFunc {
 				c.Set("claims", claims)
 				c.Set(authUserKey, user)
 				expTime := time.Unix(claims.ExpiresAt, 0).Sub(time.Now())
-				if expTime > 0 && expTime <= expHour/2 {
+				if expTime > 0 && expTime <= expiresDuration/2 {
 					oldExpiresAt := time.Unix(claims.ExpiresAt, 0).String()
 					token := claims.Extend(time.Now()).SignedString()
 					if err = user.OnlineExtend(claims); err != nil {

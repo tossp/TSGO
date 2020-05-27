@@ -2,22 +2,29 @@ package storage
 
 import (
 	"fmt"
+	"github.com/spf13/viper"
 	"net/url"
 	"time"
 
-	"github.com/tossp/tsgo/pkg/errors"
-	"github.com/tossp/tsgo/pkg/setting"
-
 	minio "github.com/minio/minio-go/v6"
+	"github.com/tossp/tsgo/pkg/errors"
 )
 
 const expires = time.Hour
 
 var (
 	minioClient *minio.Client
-	bucketName  = setting.StorageBucketName()
+	bucketName  = viper.GetString("storage.Bucket")
 	bucketOk    = false
 )
+
+func init() {
+	viper.SetDefault("storage.Bucket", "sites")
+	viper.SetDefault("storage.Endpoint", "127.0.0.1")
+	viper.SetDefault("storage.AccessKey", "Q3AM3UQ867SPQQA43P2F")
+	viper.SetDefault("storage.SecretKey", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
+	viper.SetDefault("storage.Secure", true)
+}
 
 func makeBucket() (err error) {
 	has, err := minioClient.BucketExists(bucketName)
@@ -36,10 +43,10 @@ func makeBucket() (err error) {
 }
 
 func initMinio() (err error) {
-	endpoint := setting.StorageEndpoint()
-	accessKeyID := setting.StorageAccessKey()
-	secretAccessKey := setting.StorageSecretKey()
-	secure := setting.StorageSecure()
+	endpoint := viper.GetString("storage.Endpoint")
+	accessKeyID := viper.GetString("storage.AccessKey")
+	secretAccessKey := viper.GetString("storage.SecretKey")
+	secure := viper.GetBool("storage.Secure")
 
 	if minioClient, err = minio.New(endpoint, accessKeyID, secretAccessKey, secure); err != nil {
 		err = errors.NewMessageError(err, 7100, "文件存储系统初始化失败")

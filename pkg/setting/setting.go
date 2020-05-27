@@ -2,7 +2,10 @@ package setting
 
 import (
 	"crypto/ecdsa"
+	"flag"
 	"fmt"
+	"github.com/spf13/pflag"
+	"github.com/tossp/tsgo/pkg/utils"
 	"os"
 	"path/filepath"
 
@@ -28,10 +31,9 @@ var (
 	ProjectName  = "invalid"
 )
 var (
-	appPath      string
-	globalKey    *ecdsa.PrivateKey
-	globalAseKey []byte
-	gmKey        *sm2.PrivateKey
+	appPath   string
+	globalKey *ecdsa.PrivateKey
+	gmKey     *sm2.PrivateKey
 )
 
 func init() {
@@ -40,14 +42,36 @@ func init() {
 	if err := os.Chdir(appPath); err != nil {
 		panic(err)
 	}
+
+	viper.SetDefault(ConfigDirKey, UseConfigPath("configs"))
+	viper.SetDefault(DataDirKey, UseAppPath("data"))
+	viper.SetDefault(LogDirKey, UseAppPath("data", "logs"))
+	viper.SetDefault("secret", utils.GetRandomString(32))
+	viper.SetDefault("mod", "prod")
+
+	//viper.SetEnvPrefix("ts")
+	//viper.AutomaticEnv()
+	//_ = viper.BindEnv(DataDirKey)
+	//_ = viper.BindEnv(ConfigDirKey)
+
+	flag.String(ConfigDirKey, viper.GetString(ConfigDirKey), "基础配置文件路径")
+	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
+	pflag.Parse()
+	_ = viper.BindPFlags(pflag.CommandLine)
+
+	_ = os.MkdirAll(viper.GetString(ConfigDirKey), 0755)
+
+	viper.SetConfigName(configFileName)
+	viper.AddConfigPath(viper.GetString(ConfigDirKey))
+	//viper.AddConfigPath(UseAppPath("configs"))
+	viper.AddConfigPath(appPath)
+	//viper.AddConfigPath("$HOME/.ts_site")
+	//viper.AddConfigPath(".")
+
 	config()
 	watch()
 	globalKey = crypto.NewKeyWithKey([]byte(GetSecret()))
 	gmKey = crypto.NewSm2KeyWithKey([]byte(GetSecret()))
-	globalAseKey, _ = crypto.GenerateSharedSecret(globalKey, &crypto.NewKeyWithKey([]byte("砼砼")).PublicKey)
-	if viper.GetString("control.pass") == "" {
-		SetKeyPass("tossp")
-	}
 }
 
 func UseAppPath(elem ...string) string {

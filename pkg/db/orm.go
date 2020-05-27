@@ -2,6 +2,7 @@ package db
 
 import (
 	"fmt"
+	"github.com/spf13/viper"
 	"strings"
 	"sync"
 	"time"
@@ -23,6 +24,18 @@ var (
 	dbGormTables  []interface{}
 )
 
+func init() {
+	viper.SetDefault("db.User", "ts")
+	viper.SetDefault("db.Password", "123456")
+	viper.SetDefault("db.Prefix", "ts")
+	viper.SetDefault("db.Host", "127.0.0.1")
+	viper.SetDefault("db.Port", 5432)
+	viper.SetDefault("db.Name", "ts")
+	viper.SetDefault("db.Ssl_mode", "disable")
+	viper.SetDefault("db.Max_Idle_Conns", 10)
+	viper.SetDefault("db.Max_Open_Conns", 20)
+}
+
 //StartGorm 启动GORM
 func StartGorm() (err error) {
 	log.Info("初始化数据模型")
@@ -31,14 +44,15 @@ func StartGorm() (err error) {
 	}
 	dialect := fmt.Sprintf(
 		"postgres://%s:%s@%s:%d/%s?sslmode=%s&fallback_application_name=%s&Schema",
-		setting.DbUser(), setting.DbPassword(), setting.DbHost(), setting.DbPort(), setting.DbName(), setting.DbMode(), setting.AppName,
+		viper.GetString("db.User"), viper.GetString("db.Password"), viper.GetString("db.Host"),
+		viper.GetInt64("db.Port"), viper.GetString("db.Name"), viper.GetString("db.Ssl_mode"), setting.AppName,
 	)
 	db, err := gorm.Open("postgres", dialect)
 	if err != nil {
-		panic("尝试连接数据库失败：" + strings.Replace(dialect, setting.DbPassword(), "******", -1))
+		panic("尝试连接数据库失败：" + strings.Replace(dialect, viper.GetString("db.Password"), "******", -1) + err.Error())
 	}
-	db.DB().SetMaxIdleConns(setting.DbMaxIdleConns())
-	db.DB().SetMaxOpenConns(setting.DbMaxOpenConns())
+	db.DB().SetMaxIdleConns(viper.GetInt("db.Max_Idle_Conns"))
+	db.DB().SetMaxOpenConns(viper.GetInt("db.Max_Open_Conns"))
 	db.DB().SetConnMaxLifetime(time.Minute * 15)
 	//db.LogMode(true)
 	db.SetLogger(newLog(log.Desugar().Named("db").WithOptions(zap.AddCallerSkip(6))))
@@ -55,7 +69,7 @@ func G() *gorm.DB {
 
 //TableName 计算表名
 func TableName(defaultTableName string) string {
-	return fmt.Sprintf("%s_%s", setting.DbPrefix(), defaultTableName)
+	return fmt.Sprintf("tsl_%s_%s", strings.ToLower(viper.GetString("db.Prefix")), defaultTableName)
 }
 
 func autoMigrate() {

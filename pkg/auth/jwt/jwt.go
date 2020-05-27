@@ -2,6 +2,7 @@ package jwt
 
 import (
 	"fmt"
+	"github.com/spf13/viper"
 	"net"
 	"time"
 
@@ -14,10 +15,14 @@ import (
 )
 
 const (
-	expHour   = time.Minute * 30
 	Bearer    = "Bearer "
 	XTseToken = "X-Ts-Token"
 	CookieKey = "ts-token"
+)
+
+var (
+	tokenKey        = crypto.NewKeyWithKey([]byte(setting.GetSecret() + "TossP.com"))
+	expiresDuration = time.Minute * 30
 )
 
 type IUser interface {
@@ -52,15 +57,6 @@ func (m *user) OnlineCheck(c *TsClaims, ip net.IP) error {
 	panic("请使用 jwt.SetUserMode 初始化默认用户接口")
 }
 
-func setUserMode(u IUser) {
-	defUser = u
-}
-
-var (
-	tokenKey       = crypto.NewKeyWithKey([]byte(setting.GetSecret() + "TossP.com"))
-	defUser  IUser = new(user)
-)
-
 type TsClaims struct {
 	jwt.StandardClaims
 	UserID null.UUID `json:"usi,omitempty"`
@@ -68,7 +64,7 @@ type TsClaims struct {
 
 //Extend 延期Token
 func (c *TsClaims) Extend(ct time.Time) *TsClaims {
-	c.ExpiresAt = ct.Add(expHour).Unix()
+	c.ExpiresAt = ct.Add(expiresDuration).Unix()
 	c.NotBefore = ct.Unix()
 	return c
 }
@@ -82,10 +78,32 @@ func (c *TsClaims) SignedString() (t string) {
 	return
 }
 
+func init() {
+	viper.SetDefault("auth.Timeout", 30)
+	ReadTimeout()
+}
+
+func ReadTimeout() (timeout int64) {
+	timeout = viper.GetInt64("auth.Timeout")
+	if timeout < 1 || timeout > 30 {
+		timeout = 30
+		viper.Set("auth.Timeout", timeout)
+	}
+	expiresDuration = time.Minute * time.Duration(timeout)
+	return
+}
+func SetTimeout(timeout int64) int64 {
+	if timeout < 1 || timeout > 30 {
+		timeout = 30
+	}
+	viper.Set("auth.Timeout", timeout)
+	return ReadTimeout()
+}
+
 //GenerateToken 生成Token
 func GenerateToken(id null.UUID, ct time.Time) (claims *TsClaims, t string) {
 	claims = new(TsClaims)
-	claims.ExpiresAt = ct.Add(expHour).Unix()
+	claims.ExpiresAt = ct.Add(expiresDuration).Unix()
 	claims.NotBefore = ct.Unix()
 	claims.IssuedAt = time.Now().Unix()
 
@@ -115,7 +133,7 @@ func parseToken(token string) (t *jwt.Token, err error) {
 }
 
 //ParseToken 预处理Token
-func validJwt(auth string) (user IUser, claims *TsClaims, err error) {
+func validJwt(u IUser, auth string) (user IUser, claims *TsClaims, err error) {
 	l := len(Bearer)
 	if len(auth) > l+1 && auth[:l] == Bearer {
 		t, fuck := parseToken(auth[l:])
@@ -124,7 +142,7 @@ func validJwt(auth string) (user IUser, claims *TsClaims, err error) {
 			return
 		}
 		if data, ok := t.Claims.(*TsClaims); ok && t.Valid {
-			user = defUser.New()
+			user = u.New()
 			err = user.GetByID(data.UserID)
 			claims = data
 			return
