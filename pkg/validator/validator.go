@@ -12,10 +12,10 @@ import (
 )
 
 var (
-	validate = new(defaultValidator)
+	validate = new(TsValidator)
 )
 
-type defaultValidator struct {
+type TsValidator struct {
 	once      sync.Once
 	validator *validator.Validate
 }
@@ -30,17 +30,18 @@ func kindOfData(data interface{}) reflect.Kind {
 }
 
 // Validate For echo
-func (v *defaultValidator) Validate(i interface{}) error {
-	return v.Struct(i)
+func (v *TsValidator) Validate(i interface{}) error {
+	v.lazyinit()
+	return v.validator.Struct(i)
 }
 
-func (v *defaultValidator) Var(field interface{}, tag string) error {
+func (v *TsValidator) Var(field interface{}, tag string) error {
 	return v.validator.Var(field, tag)
 }
-func (v *defaultValidator) VarWithValue(field interface{}, other interface{}, tag string) error {
+func (v *TsValidator) VarWithValue(field interface{}, other interface{}, tag string) error {
 	return v.validator.VarWithValue(field, other, tag)
 }
-func (v *defaultValidator) Struct(obj interface{}) error {
+func (v *TsValidator) Struct(obj interface{}) error {
 	if kindOfData(obj) == reflect.Struct {
 		v.lazyinit()
 		if err := v.validator.Struct(obj); err != nil {
@@ -50,12 +51,12 @@ func (v *defaultValidator) Struct(obj interface{}) error {
 	return nil
 }
 
-func (v *defaultValidator) Engine() interface{} {
+func (v *TsValidator) Engine() interface{} {
 	v.lazyinit()
 	return v.validator
 }
 
-func (v *defaultValidator) lazyinit() {
+func (v *TsValidator) lazyinit() {
 	v.once.Do(func() {
 		trans := FindTranslator("zh")
 		v.validator = validator.New()
@@ -68,21 +69,25 @@ func (v *defaultValidator) lazyinit() {
 			sql.NullString{}, sql.NullInt64{}, sql.NullInt64{}, sql.NullBool{}, sql.NullFloat64{},
 			null.Bool{}, null.CIDR{}, null.Float{}, null.Int{}, null.IP{}, null.String{}, null.Time{}, null.UUID{},
 		)
+
+		_ = v.validator.RegisterTranslation("alphanumunicode", trans, registrationFunc("alphanumunicode", "{0}只能包含字母、数字和汉字", false), translateFunc)
+		_ = v.validator.RegisterTranslation("alphaunicode", trans, registrationFunc("alphaunicode", "{0}只能包含字母和汉字", false), translateFunc)
+		_ = v.validator.RegisterTranslation("e164", trans, registrationFunc("e164", "{0}必须是一个有效的电话号码", false), translateFunc)
 	})
 }
-func (v *defaultValidator) RegisterValidation(tag string, fn validator.Func, callValidationEvenIfNull ...bool) error {
+func (v *TsValidator) RegisterValidation(tag string, fn validator.Func, callValidationEvenIfNull ...bool) error {
 	v.lazyinit()
 	return v.validator.RegisterValidation(tag, fn, callValidationEvenIfNull...)
 }
-func (v *defaultValidator) RegisterTranslation(tag string, registerFn validator.RegisterTranslationsFunc, translationFn validator.TranslationFunc, locales ...string) error {
+func (v *TsValidator) RegisterTranslation(tag string, registerFn validator.RegisterTranslationsFunc, translationFn validator.TranslationFunc, locales ...string) error {
 	v.lazyinit()
 	trans := FindTranslator(locales...)
 	return v.validator.RegisterTranslation(tag, trans, registerFn, translationFn)
 }
 
 //New 创建新的验证器
-func New() *defaultValidator {
-	return &defaultValidator{}
+func New() *TsValidator {
+	return &TsValidator{}
 }
 
 var nl = struct{}{}
@@ -101,7 +106,6 @@ func ValidateDBType(field reflect.Value) (val interface{}) {
 
 		}
 	}
-
 	return nil
 }
 
