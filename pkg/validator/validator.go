@@ -3,12 +3,15 @@ package validator
 import (
 	"database/sql"
 	"database/sql/driver"
+	"fmt"
 	"reflect"
 	"sync"
 
 	"github.com/go-playground/validator/v10"
 	zhTrans "github.com/go-playground/validator/v10/translations/zh"
+	"github.com/tossp/tsgo/pkg/db"
 	"github.com/tossp/tsgo/pkg/null"
+	"github.com/tossp/tsgo/pkg/utils"
 )
 
 var (
@@ -58,21 +61,24 @@ func (v *TsValidator) Engine() interface{} {
 
 func (v *TsValidator) lazyinit() {
 	v.once.Do(func() {
-		trans := FindTranslator("zh")
 		v.validator = validator.New()
 		v.validator.SetTagName("valid")
 		v.validator.RegisterTagNameFunc(func(fld reflect.StructField) string {
 			return fld.Tag.Get("desc")
 		})
-		_ = zhTrans.RegisterDefaultTranslations(v.validator, trans)
+		v.validator.RegisterValidation("tsdbunique", ValidateUniq, true)
 		v.validator.RegisterCustomTypeFunc(ValidateDBType,
 			sql.NullString{}, sql.NullInt64{}, sql.NullInt64{}, sql.NullBool{}, sql.NullFloat64{},
 			null.Bool{}, null.CIDR{}, null.Float{}, null.Int{}, null.IP{}, null.String{}, null.Time{}, null.UUID{},
 		)
 
+		trans := FindTranslator("zh")
+		_ = zhTrans.RegisterDefaultTranslations(v.validator, trans)
 		_ = v.validator.RegisterTranslation("alphanumunicode", trans, registrationFunc("alphanumunicode", "{0}只能包含字母、数字和汉字", false), translateFunc)
 		_ = v.validator.RegisterTranslation("alphaunicode", trans, registrationFunc("alphaunicode", "{0}只能包含字母和汉字", false), translateFunc)
 		_ = v.validator.RegisterTranslation("e164", trans, registrationFunc("e164", "{0}必须是一个有效的电话号码", false), translateFunc)
+		_ = v.validator.RegisterTranslation("tsdbunique", trans, registrationFunc("tsdbunique", "{0}已经被其他记录使用，请更换", false), translateFunc)
+
 	})
 }
 func (v *TsValidator) RegisterValidation(tag string, fn validator.Func, callValidationEvenIfNull ...bool) error {
@@ -107,6 +113,27 @@ func ValidateDBType(field reflect.Value) (val interface{}) {
 		}
 	}
 	return nil
+}
+
+func ValidateUniq(fl validator.FieldLevel) bool {
+	currentField, _, _, _ := fl.GetStructFieldOK2()
+	table := currentField.Type().Name() // table name
+	value := fl.Field().String()        // value
+	column := fl.StructFieldName()      // column name
+	result := 0
+	q := db.G().
+		//Debug().
+		Table(db.TableName(utils.GonicCasedName(table))).
+		Where(fmt.Sprintf("%s=?", utils.GonicCasedName(column)), value)
+	uid := currentField.FieldByName("UID")
+	if !uid.IsZero() {
+		q = q.Where("uid!=?", uid.Interface())
+	}
+	q = q.Count(&result)
+	if q.Error != nil {
+		return false
+	}
+	return result == 0
 }
 
 //func UserStructLevelValidation(sl validator.StructLevel) {
