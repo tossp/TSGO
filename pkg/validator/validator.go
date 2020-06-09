@@ -5,6 +5,7 @@ import (
 	"database/sql/driver"
 	"fmt"
 	"reflect"
+	"regexp"
 	"sync"
 
 	"github.com/go-playground/validator/v10"
@@ -67,6 +68,7 @@ func (v *TsValidator) lazyinit() {
 			return fld.Tag.Get("desc")
 		})
 		v.validator.RegisterValidation("tsdbunique", ValidateUniq, true)
+		v.validator.RegisterValidation("tscmpn", ValidateChinaMobilePhoneNum, true)
 		v.validator.RegisterCustomTypeFunc(ValidateDBType,
 			sql.NullString{}, sql.NullInt64{}, sql.NullInt64{}, sql.NullBool{}, sql.NullFloat64{},
 			null.Bool{}, null.CIDR{}, null.Float{}, null.Int{}, null.IP{}, null.String{}, null.Time{}, null.UUID{},
@@ -78,6 +80,7 @@ func (v *TsValidator) lazyinit() {
 		_ = v.validator.RegisterTranslation("alphaunicode", trans, registrationFunc("alphaunicode", "{0}只能包含字母和汉字", false), translateFunc)
 		_ = v.validator.RegisterTranslation("e164", trans, registrationFunc("e164", "{0}必须是一个有效的电话号码", false), translateFunc)
 		_ = v.validator.RegisterTranslation("tsdbunique", trans, registrationFunc("tsdbunique", "{0}已经被其他记录使用，请更换", false), translateFunc)
+		_ = v.validator.RegisterTranslation("tscmpn", trans, registrationFunc("tscmpn", "{0}必须是一个有效的国内手机号码", false), translateFunc)
 
 	})
 }
@@ -134,6 +137,10 @@ func ValidateUniq(fl validator.FieldLevel) bool {
 		return false
 	}
 	return result == 0
+}
+func ValidateChinaMobilePhoneNum(fl validator.FieldLevel) bool {
+	return regexp.MustCompile("^(?:(?:\\+|00)86)?1(?:(?:3[\\d])|(?:4[5-7|9])|(?:5[0-3|5-9])|(?:6[5-7])|(?:7[0-8])|(?:8[\\d])|(?:9[1|8|9]))\\d{8}$").
+		MatchString(fl.Field().String())
 }
 
 //func UserStructLevelValidation(sl validator.StructLevel) {
