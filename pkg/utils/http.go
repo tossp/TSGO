@@ -4,6 +4,12 @@ import (
 	"net"
 	"net/http"
 	"strings"
+
+	"github.com/go-resty/resty/v2"
+)
+
+var (
+	httpClient = resty.New().GetClient()
 )
 
 // HTTP Header keys
@@ -121,4 +127,8 @@ func AcceptedLanguages(r *http.Request) (languages []string) {
 		languages[i] = strings.Trim(locale[0], " ")
 	}
 	return
+}
+
+func HttpClient() {
+
 }

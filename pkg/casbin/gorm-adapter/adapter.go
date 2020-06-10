@@ -32,7 +32,7 @@ type Filter struct {
 }
 
 func (c *CasbinRule) TableName() string {
-	return c.TablePrefix + "cb_rule" //as Gorm keeps table names are plural, and we love consistency
+	return c.TablePrefix + "cb_rules" //as Gorm keeps table names are plural, and we love consistency
 }
 
 // Adapter represents the Gorm adapter for policy storage.

@@ -12,7 +12,8 @@ import (
 	zhTrans "github.com/go-playground/validator/v10/translations/zh"
 	"github.com/tossp/tsgo/pkg/db"
 	"github.com/tossp/tsgo/pkg/null"
-	"github.com/tossp/tsgo/pkg/utils"
+	//"github.com/tossp/tsgo/pkg/utils"
+	//"github.com/jinzhu/inflection"
 )
 
 var (
@@ -126,8 +127,8 @@ func ValidateUniq(fl validator.FieldLevel) bool {
 	result := 0
 	q := db.G().
 		//Debug().
-		Table(db.TableName(utils.GonicCasedName(table))).
-		Where(fmt.Sprintf("%s=?", utils.GonicCasedName(column)), value)
+		Table(db.TableName(table)).
+		Where(fmt.Sprintf("%s=?", db.ColumnName(column)), value)
 	uid := currentField.FieldByName("UID")
 	if !uid.IsZero() {
 		q = q.Where("uid!=?", uid.Interface())

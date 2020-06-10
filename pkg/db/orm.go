@@ -12,6 +12,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/jinzhu/gorm"
+	"github.com/jinzhu/inflection"
 	"github.com/pkg/errors"
 
 	//引入对postgres支持
@@ -67,9 +68,19 @@ func G() *gorm.DB {
 	return g
 }
 
+//IsRecordNotFoundError GORM实例
+func IsRecordNotFoundError(err error) bool {
+	return gorm.IsRecordNotFoundError(err)
+}
+
 //TableName 计算表名
-func TableName(defaultTableName string) string {
-	return fmt.Sprintf("tsl_%s_%s", strings.ToLower(viper.GetString("db.Prefix")), defaultTableName)
+func TableName(name string) string {
+	return fmt.Sprintf("tsl_%s_%s", strings.ToLower(viper.GetString("db.Prefix")), inflection.Plural(gorm.ToTableName(name)))
+}
+
+//TableName 计算表名
+func ColumnName(name string) string {
+	return gorm.ToColumnName(name)
 }
 
 func autoMigrate() {

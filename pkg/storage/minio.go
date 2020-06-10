@@ -7,6 +7,7 @@ import (
 	"time"
 
 	minio "github.com/minio/minio-go/v6"
+	"github.com/minio/minio/pkg/madmin"
 	"github.com/tossp/tsgo/pkg/errors"
 )
 
@@ -14,6 +15,7 @@ const expires = time.Hour
 
 var (
 	minioClient *minio.Client
+	mdmClnt     *madmin.AdminClient
 	bucketName  = viper.GetString("storage.Bucket")
 	bucketOk    = false
 )
@@ -43,10 +45,24 @@ func makeBucket() (err error) {
 }
 
 func initMinio() (err error) {
+	bucketName = viper.GetString("storage.Bucket")
 	endpoint := viper.GetString("storage.Endpoint")
 	accessKeyID := viper.GetString("storage.AccessKey")
 	secretAccessKey := viper.GetString("storage.SecretKey")
 	secure := viper.GetBool("storage.Secure")
+
+	if mdmClnt, err = madmin.New(endpoint, accessKeyID, secretAccessKey, secure); err != nil {
+		err = errors.NewMessageError(err, 7100, "文件存储系统初始化失败")
+		mdmClnt = nil
+		return
+	}
+	mdmClnt.SetAppInfo("sites", "0.0.1")
+	//si, err := mdmClnt.ServerInfo(context.Background())
+	//if err != nil {
+	//    fmt.Println(err)
+	//    return
+	//}
+	//log.Debug("附件服务器", si)
 
 	if minioClient, err = minio.New(endpoint, accessKeyID, secretAccessKey, secure); err != nil {
 		err = errors.NewMessageError(err, 7100, "文件存储系统初始化失败")
@@ -54,7 +70,7 @@ func initMinio() (err error) {
 		return
 	}
 	minioClient.TraceOff()
-	minioClient.TraceOn(nil)
+	//minioClient.TraceOn(nil)
 	minioClient.SetAppInfo("sites", "0.0.1")
 	err = makeBucket()
 	return
