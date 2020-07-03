@@ -4,7 +4,7 @@ go 1.14
 
 require (
 	github.com/allegro/bigcache v1.2.1
-	github.com/casbin/casbin/v2 v2.7.2
+	github.com/casbin/casbin/v2 v2.8.0
 	github.com/denisenkom/go-mssqldb v0.0.0-20200206145737-bbfc9a55622e // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/fsnotify/fsnotify v1.4.9
@@ -21,7 +21,7 @@ require (
 	github.com/jinzhu/inflection v1.0.0
 	github.com/jinzhu/now v1.1.1 // indirect
 	github.com/labstack/echo/v4 v4.1.16
-	github.com/lib/pq v1.7.0 // indirect
+	github.com/lib/pq v1.7.0
 	github.com/mattn/go-colorable v0.1.7 // indirect
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible // indirect
 	github.com/minio/minio v0.0.0-20200702003552-fabd0469585a
@@ -29,7 +29,7 @@ require (
 	github.com/mitchellh/mapstructure v1.3.2 // indirect
 	github.com/montanaflynn/stats v0.6.3 // indirect
 	github.com/pelletier/go-toml v1.8.0 // indirect
-	github.com/pkg/errors v0.9.1
+	github.com/pkg/errors v0.9.1 // indirect
 	github.com/satori/go.uuid v1.2.0
 	github.com/secure-io/sio-go v0.3.1 // indirect
 	github.com/shirou/gopsutil v2.20.6+incompatible // indirect

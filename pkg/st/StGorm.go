@@ -85,7 +85,7 @@ func StGorm(c echo.Context, obj interface{}, omit ...string) (data map[string]in
 	}
 	if ex, ok := c.Get(stOrderKey).([]*ExOrder); ok {
 		for _, v := range ex {
-			m = m.Order(v.Value, v.Reorder...)
+			m = m.Order(v.Value)
 		}
 	}
 	if ex, ok := c.Get(stOmitKey).([]*ExOmit); ok {
@@ -100,12 +100,8 @@ func StGorm(c echo.Context, obj interface{}, omit ...string) (data map[string]in
 			m = m.Preload(v.Column, v.Conditions...)
 		}
 	}
-	if ex, ok := c.Get(stRelatedKey).([]*ExRelated); ok {
-		for _, v := range ex {
-			m = m.Related(v.Value, v.ForeignKeys...)
-		}
-	}
-	total := 0
+
+	var total int64
 	if err = m.Model(obj).Count(&total).Error; err != nil {
 		err = errors.NewMessageError(err, 0, "获取列表数量错误")
 		return

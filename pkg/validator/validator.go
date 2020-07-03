@@ -124,7 +124,7 @@ func ValidateUniq(fl validator.FieldLevel) bool {
 	table := currentField.Type().Name() // table name
 	value := fl.Field().String()        // value
 	column := fl.StructFieldName()      // column name
-	result := 0
+	var result int64
 	q := db.G().
 		//Debug().
 		Table(db.TableName(table)).

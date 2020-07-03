@@ -12,11 +12,8 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/jinzhu/gorm"
-	"github.com/jinzhu/inflection"
-	"github.com/pkg/errors"
-
-	//引入对postgres支持
 	_ "github.com/jinzhu/gorm/dialects/postgres"
+	"github.com/jinzhu/inflection"
 )
 
 var (
@@ -122,7 +119,6 @@ func gsync() (err error) {
 	defer log.Info("同步数据库实体过程结束")
 	if err = g.Debug().AutoMigrate(dbGormTables...).Error; err != nil {
 		log.Errorw("同步数据库实体错误", "err", err)
-		err = errors.Wrap(err, "同步数据库实体错误")
 		return
 	}
 	return

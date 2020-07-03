@@ -2,18 +2,16 @@ package st
 
 import (
 	"fmt"
-	"reflect"
-
 	"github.com/jinzhu/gorm"
 	"github.com/tossp/tsgo/pkg/errors"
 	"github.com/tossp/tsgo/pkg/log"
 	"github.com/tossp/tsgo/pkg/utils"
+	"reflect"
 )
 
 const (
 	stFilterKey      = "StFilter"
 	stPreloadKey     = "StPreload"
-	stRelatedKey     = "StRelated"
 	stWhereKey       = "StWhere"
 	stOrderKey       = "StOrder"
 	stOmitKey        = "StOmit"
@@ -117,18 +115,6 @@ type ExRelated struct {
 	ForeignKeys []string
 }
 
-func MakeRelated(c Context, value interface{}, foreignKeys ...string) {
-	tmp := make([]*ExRelated, 0)
-	if exPreload, ok := c.Get(stRelatedKey).([]*ExRelated); ok {
-		tmp = exPreload
-	}
-	tmp = append(tmp, &ExRelated{
-		Value:       value,
-		ForeignKeys: foreignKeys,
-	})
-	c.Set(stRelatedKey, tmp)
-}
-
 type ExWhere struct {
 	Query interface{}
 	Args  []interface{}
@@ -147,18 +133,16 @@ func MakeWhere(c Context, query interface{}, args ...interface{}) {
 }
 
 type ExOrder struct {
-	Value   interface{}
-	Reorder []bool
+	Value interface{}
 }
 
-func MakeOrder(c Context, value interface{}, reorder ...bool) {
+func MakeOrder(c Context, value interface{}) {
 	tmp := make([]*ExOrder, 0)
 	if ex, ok := c.Get(stOrderKey).([]*ExOrder); ok {
 		tmp = ex
 	}
 	tmp = append(tmp, &ExOrder{
-		Value:   value,
-		Reorder: reorder,
+		Value: value,
 	})
 	c.Set(stOrderKey, tmp)
 }
