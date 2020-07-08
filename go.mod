@@ -4,7 +4,7 @@ go 1.14
 
 require (
 	github.com/allegro/bigcache v1.2.1
-	github.com/casbin/casbin/v2 v2.8.0
+	github.com/casbin/casbin/v2 v2.8.2
 	github.com/denisenkom/go-mssqldb v0.0.0-20200206145737-bbfc9a55622e // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/fsnotify/fsnotify v1.4.9
@@ -20,11 +20,12 @@ require (
 	github.com/jinzhu/gorm v1.9.14
 	github.com/jinzhu/inflection v1.0.0
 	github.com/jinzhu/now v1.1.1 // indirect
+	github.com/klauspost/cpuid v1.3.1 // indirect
 	github.com/labstack/echo/v4 v4.1.16
 	github.com/lib/pq v1.7.0
 	github.com/mattn/go-colorable v0.1.7 // indirect
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible // indirect
-	github.com/minio/minio v0.0.0-20200702003552-fabd0469585a
+	github.com/minio/minio v0.0.0-20200707152854-14885ef98d83
 	github.com/minio/minio-go/v6 v6.0.58-0.20200612001654-a57fec8037ec
 	github.com/mitchellh/mapstructure v1.3.2 // indirect
 	github.com/montanaflynn/stats v0.6.3 // indirect
@@ -40,11 +41,11 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.7.0
 	github.com/tjfoc/gmsm v1.3.2
-	github.com/valyala/fasttemplate v1.1.1 // indirect
+	github.com/valyala/fasttemplate v1.2.0 // indirect
 	go.uber.org/zap v1.15.0
-	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
+	golang.org/x/crypto v0.0.0-20200707235045-ab33eee955e0
 	golang.org/x/lint v0.0.0-20200302205851-738671d3881b // indirect
-	golang.org/x/net v0.0.0-20200625001655-4c5254603344 // indirect
+	golang.org/x/net v0.0.0-20200707034311-ab3426394381 // indirect
 	golang.org/x/sys v0.0.0-20200625212154-ddb9806d33ae // indirect
 	golang.org/x/text v0.3.3 // indirect
 	golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543
