@@ -43,7 +43,7 @@ func init() {
 		panic(err)
 	}
 
-	viper.SetDefault(ConfigDirKey, UseConfigPath("configs"))
+	viper.SetDefault(ConfigDirKey, UseAppPath("configs"))
 	viper.SetDefault(DataDirKey, UseAppPath("data"))
 	viper.SetDefault(LogDirKey, UseAppPath("data", "logs"))
 	viper.SetDefault("secret", utils.GetRandomString(32))
