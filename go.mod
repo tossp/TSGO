@@ -4,7 +4,7 @@ go 1.14
 
 require (
 	github.com/allegro/bigcache v1.2.1
-	github.com/casbin/casbin/v2 v2.11.2
+	github.com/casbin/casbin/v2 v2.11.3
 	github.com/denisenkom/go-mssqldb v0.0.0-20200206145737-bbfc9a55622e // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/fsnotify/fsnotify v1.4.9
@@ -25,7 +25,7 @@ require (
 	github.com/lib/pq v1.8.0
 	github.com/magiconair/properties v1.8.2 // indirect
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible // indirect
-	github.com/minio/minio v0.0.0-20200902071903-37da0c647e65
+	github.com/minio/minio v0.0.0-20200912011549-b70995dd60cc
 	github.com/minio/minio-go/v6 v6.0.58-0.20200612001654-a57fec8037ec
 	github.com/minio/minio-go/v7 v7.0.5 // indirect
 	github.com/mitchellh/mapstructure v1.3.3 // indirect
@@ -35,7 +35,7 @@ require (
 	github.com/satori/go.uuid v1.2.0
 	github.com/secure-io/sio-go v0.3.1 // indirect
 	github.com/shirou/gopsutil v2.20.8+incompatible // indirect
-	github.com/spf13/afero v1.3.4 // indirect
+	github.com/spf13/afero v1.3.5 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5
@@ -45,11 +45,12 @@ require (
 	go.uber.org/zap v1.16.0
 	golang.org/x/crypto v0.0.0-20200820211705-5c72a883971a
 	golang.org/x/lint v0.0.0-20200302205851-738671d3881b // indirect
-	golang.org/x/sys v0.0.0-20200831180312-196b9ba8737a // indirect
+	golang.org/x/net v0.0.0-20200904194848-62affa334b73 // indirect
+	golang.org/x/sys v0.0.0-20200909081042-eff7692f9009 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
 	google.golang.org/protobuf v1.25.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
-	gopkg.in/ini.v1 v1.60.2 // indirect
+	gopkg.in/ini.v1 v1.61.0 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 	honnef.co/go/tools v0.0.1-2020.1.3 // indirect
 	xorm.io/builder v0.3.7 // indirect

@@ -58,7 +58,7 @@ func mustPtrStruct(structName interface{}) (err error) {
 	}
 	return
 }
-func makePtrSlice(structName interface{}) (objs interface{}, err error) {
+func makePtrSlice(structName interface{}, cap int) (objs interface{}, err error) {
 	t := reflect.TypeOf(structName)
 	if t.Kind() == reflect.Ptr {
 		t = t.Elem()
@@ -70,7 +70,7 @@ func makePtrSlice(structName interface{}) (objs interface{}, err error) {
 		err = errors.New(fmt.Sprintf("类型不为实体,%s", t))
 		return
 	}
-	slice := reflect.MakeSlice(reflect.SliceOf(reflect.TypeOf(structName)), 0, 5)
+	slice := reflect.MakeSlice(reflect.SliceOf(reflect.TypeOf(structName)), 0, cap)
 	tmp := reflect.New(slice.Type())
 	tmp.Elem().Set(slice)
 	objs = tmp.Interface()

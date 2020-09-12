@@ -72,12 +72,6 @@ func StGorm(c echo.Context, obj interface{}, omit ...string) (data map[string]in
 
 	//multiSort := strings.Split(orgSort, "-")
 	m = makeGorm(m, orgSort, filter)
-	data = make(map[string]interface{})
-	objs, err := makePtrSlice(obj)
-	if err != nil {
-		err = errors.NewMessageError(err, 0, "反射数据实体错误")
-		return
-	}
 	if ex, ok := c.Get(stWhereKey).([]*ExWhere); ok {
 		for _, v := range ex {
 			m = m.Where(v.Query, v.Args...)
@@ -101,9 +95,19 @@ func StGorm(c echo.Context, obj interface{}, omit ...string) (data map[string]in
 		}
 	}
 
-	var total int64
+	var total int
 	if err = m.Model(obj).Count(&total).Error; err != nil {
 		err = errors.NewMessageError(err, 0, "获取列表数量错误")
+		return
+	}
+	var cap int
+	if err = m.Model(obj).Offset(ps * (pi - 1)).Limit(ps).Count(&cap).Error; err != nil {
+		err = errors.NewMessageError(err, 0, "获取列表数量错误")
+		return
+	}
+	objs, err := makePtrSlice(obj, cap)
+	if err != nil {
+		err = errors.NewMessageError(err, 0, "反射数据实体错误")
 		return
 	}
 	if err = m.Offset(ps * (pi - 1)).Limit(ps).Find(objs).Error; err != nil {
@@ -111,6 +115,7 @@ func StGorm(c echo.Context, obj interface{}, omit ...string) (data map[string]in
 		return
 	}
 
+	data = make(map[string]interface{})
 	data["total"] = total
 	data["list"] = objs
 	return
