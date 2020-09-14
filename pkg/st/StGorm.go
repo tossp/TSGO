@@ -100,12 +100,8 @@ func StGorm(c echo.Context, obj interface{}, omit ...string) (data map[string]in
 		err = errors.NewMessageError(err, 0, "获取列表数量错误")
 		return
 	}
-	var cap int
-	if err = m.Model(obj).Offset(ps * (pi - 1)).Limit(ps).Count(&cap).Error; err != nil {
-		err = errors.NewMessageError(err, 0, "获取列表数量错误")
-		return
-	}
-	objs, err := makePtrSlice(obj, cap)
+
+	objs, err := makePtrSlice(obj, 0)
 	if err != nil {
 		err = errors.NewMessageError(err, 0, "反射数据实体错误")
 		return
