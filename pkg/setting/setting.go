@@ -20,7 +20,7 @@ const (
 	DataDirKey     = "DataDir"
 	LogDirKey      = "LogDir"
 	ConfigDirKey   = "ConfigDir"
-	AppName        = "TS_SITES"
+	AppName        = "TS_GO_"
 )
 
 var (

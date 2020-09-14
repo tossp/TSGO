@@ -1,13 +1,13 @@
 package casbin
 
 import (
-	"github.com/spf13/viper"
 	"time"
 
 	"github.com/casbin/casbin/v2"
 	"github.com/casbin/casbin/v2/model"
 	gormAdapter "github.com/tossp/tsgo/pkg/casbin/gorm-adapter"
 	"github.com/tossp/tsgo/pkg/db"
+	"github.com/tossp/tsgo/pkg/setting"
 )
 
 const (
@@ -33,7 +33,7 @@ var (
 )
 
 func init() {
-	viper.SetDefault("accessControl.Enable", true)
+	setting.SetDefault("accessControl.Enable", true)
 }
 
 func Start() (err error) {
@@ -48,7 +48,7 @@ func Start() (err error) {
 	if enforcer, err = casbin.NewSyncedEnforcer(m, adapter); err != nil {
 		return
 	}
-	enforcer.EnableEnforce(viper.GetBool("accessControl.Enable"))
+	enforcer.EnableEnforce(setting.GetBool("accessControl.Enable"))
 	enforcer.EnableLog(false)
 	enforcer.EnableAutoSave(true)
 	enforcer.EnableAutoBuildRoleLinks(true)

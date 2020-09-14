@@ -8,6 +8,17 @@ import (
 	"github.com/tossp/tsgo/pkg/log"
 )
 
+var (
+	SetDefault     = viper.SetDefault
+	Set            = viper.Set
+	Get            = viper.Get
+	GetString      = viper.GetString
+	GetStringSlice = viper.GetStringSlice
+	GetInt64       = viper.GetInt64
+	GetBool        = viper.GetBool
+	GetInt         = viper.GetInt
+)
+
 func init() {
 
 }

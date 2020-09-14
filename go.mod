@@ -25,13 +25,13 @@ require (
 	github.com/lib/pq v1.8.0
 	github.com/magiconair/properties v1.8.2 // indirect
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible // indirect
-	github.com/minio/minio v0.0.0-20200912011549-b70995dd60cc
+	github.com/minio/minio v0.0.0-20200914042635-34ea1d21676e
 	github.com/minio/minio-go/v6 v6.0.58-0.20200612001654-a57fec8037ec
 	github.com/minio/minio-go/v7 v7.0.5 // indirect
 	github.com/mitchellh/mapstructure v1.3.3 // indirect
 	github.com/montanaflynn/stats v0.6.3 // indirect
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
-	github.com/pelletier/go-toml v1.8.0 // indirect
+	github.com/pelletier/go-toml v1.8.1 // indirect
 	github.com/satori/go.uuid v1.2.0
 	github.com/secure-io/sio-go v0.3.1 // indirect
 	github.com/shirou/gopsutil v2.20.8+incompatible // indirect
@@ -52,6 +52,7 @@ require (
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 	gopkg.in/ini.v1 v1.61.0 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
+	gopkg.in/yaml.v2 v2.3.0 // indirect
 	honnef.co/go/tools v0.0.1-2020.1.3 // indirect
 	xorm.io/builder v0.3.7 // indirect
 	xorm.io/core v0.7.3 // indirect

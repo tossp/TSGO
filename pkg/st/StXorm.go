@@ -62,7 +62,7 @@ func StXorm(c echo.Context, obj interface{}, omit ...string) (data map[string]in
 	//multiSort := strings.Split(orgSort, "-")
 	m = makeXorm(m, orgSort, filter)
 	data = make(map[string]interface{})
-	objs, err := makePtrSlice(obj,5)
+	objs, err := makePtrSlice(obj, 5)
 	if err != nil {
 		err = errors.NewMessageError(err, 0, "反射数据实体错误")
 		return

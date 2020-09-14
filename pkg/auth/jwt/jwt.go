@@ -2,7 +2,6 @@ package jwt
 
 import (
 	"fmt"
-	"github.com/spf13/viper"
 	"net"
 	"time"
 
@@ -79,15 +78,15 @@ func (c *TsClaims) SignedString() (t string) {
 }
 
 func init() {
-	viper.SetDefault("auth.Timeout", 30)
+	setting.SetDefault("auth.Timeout", 30)
 	ReadTimeout()
 }
 
 func ReadTimeout() (timeout int64) {
-	timeout = viper.GetInt64("auth.Timeout")
+	timeout = setting.GetInt64("auth.Timeout")
 	if timeout < 1 || timeout > 30 {
 		timeout = 30
-		viper.Set("auth.Timeout", timeout)
+		setting.Set("auth.Timeout", timeout)
 	}
 	expiresDuration = time.Minute * time.Duration(timeout)
 	return
@@ -96,7 +95,7 @@ func SetTimeout(timeout int64) int64 {
 	if timeout < 1 || timeout > 30 {
 		timeout = 30
 	}
-	viper.Set("auth.Timeout", timeout)
+	setting.Set("auth.Timeout", timeout)
 	return ReadTimeout()
 }
 

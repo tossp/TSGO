@@ -2,13 +2,13 @@ package storage
 
 import (
 	"fmt"
-	"github.com/spf13/viper"
 	"net/url"
 	"time"
 
 	minio "github.com/minio/minio-go/v6"
 	"github.com/minio/minio/pkg/madmin"
 	"github.com/tossp/tsgo/pkg/errors"
+	"github.com/tossp/tsgo/pkg/setting"
 )
 
 const expires = time.Hour
@@ -16,16 +16,16 @@ const expires = time.Hour
 var (
 	minioClient *minio.Client
 	mdmClnt     *madmin.AdminClient
-	bucketName  = viper.GetString("storage.Bucket")
+	bucketName  = setting.GetString("storage.Bucket")
 	bucketOk    = false
 )
 
 func init() {
-	viper.SetDefault("storage.Bucket", "sites")
-	viper.SetDefault("storage.Endpoint", "127.0.0.1")
-	viper.SetDefault("storage.AccessKey", "Q3AM3UQ867SPQQA43P2F")
-	viper.SetDefault("storage.SecretKey", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
-	viper.SetDefault("storage.Secure", true)
+	setting.SetDefault("storage.Bucket", "sites")
+	setting.SetDefault("storage.Endpoint", "127.0.0.1")
+	setting.SetDefault("storage.AccessKey", "Q3AM3UQ867SPQQA43P2F")
+	setting.SetDefault("storage.SecretKey", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
+	setting.SetDefault("storage.Secure", true)
 }
 
 func makeBucket() (err error) {
@@ -45,11 +45,11 @@ func makeBucket() (err error) {
 }
 
 func initMinio() (err error) {
-	bucketName = viper.GetString("storage.Bucket")
-	endpoint := viper.GetString("storage.Endpoint")
-	accessKeyID := viper.GetString("storage.AccessKey")
-	secretAccessKey := viper.GetString("storage.SecretKey")
-	secure := viper.GetBool("storage.Secure")
+	bucketName = setting.GetString("storage.Bucket")
+	endpoint := setting.GetString("storage.Endpoint")
+	accessKeyID := setting.GetString("storage.AccessKey")
+	secretAccessKey := setting.GetString("storage.SecretKey")
+	secure := setting.GetBool("storage.Secure")
 
 	if mdmClnt, err = madmin.New(endpoint, accessKeyID, secretAccessKey, secure); err != nil {
 		err = errors.NewMessageError(err, 7100, "文件存储系统初始化失败")

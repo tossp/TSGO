@@ -369,8 +369,8 @@ github.com/minio/cli v1.22.0/go.mod h1:bYxnK0uS629N3Bq+AOZZ+6lwF77Sodk4+UL9vNuXh
 github.com/minio/highwayhash v1.0.0/go.mod h1:xQboMTeM9nY9v/LlAOxFctujiv5+Aq2hR5dxBpaMbdc=
 github.com/minio/md5-simd v1.1.0 h1:QPfiOqlZH+Cj9teu0t9b1nTBfPbyTl16Of5MeuShdK4=
 github.com/minio/md5-simd v1.1.0/go.mod h1:XpBqgZULrMYD3R+M28PcmP0CkI7PEMzB3U77ZrKZ0Gw=
-github.com/minio/minio v0.0.0-20200912011549-b70995dd60cc h1:+Z2V9qsufp+6TaPjNDrs96lIsgw4+ErXBR3VRsUxwtU=
-github.com/minio/minio v0.0.0-20200912011549-b70995dd60cc/go.mod h1:fgjjwixhycP+lVAoHFyKRjuwLs7J1VSUr9Fpwxe9zT0=
+github.com/minio/minio v0.0.0-20200914042635-34ea1d21676e h1:ljY6nrtiLnUv5DYPSB3vgtRLL7E9wfCsbPpoMDUzodw=
+github.com/minio/minio v0.0.0-20200914042635-34ea1d21676e/go.mod h1:fgjjwixhycP+lVAoHFyKRjuwLs7J1VSUr9Fpwxe9zT0=
 github.com/minio/minio-go/v6 v6.0.58-0.20200612001654-a57fec8037ec h1:my1ShPzUyV5BSteRVdm/YoEhd4ycLImlN4xDX17pd8A=
 github.com/minio/minio-go/v6 v6.0.58-0.20200612001654-a57fec8037ec/go.mod h1:5+R/nM9Pwrh0vqF+HbYYDQ84wdUFPyXHkrdT4AIkifM=
 github.com/minio/minio-go/v7 v7.0.5-0.20200811211821-14ed05478889 h1:uO6mz/7ywYA4U/Xl/FzJ/FePE4HIJT76/UFdXFoOqUY=
@@ -437,8 +437,8 @@ github.com/pascaldekloe/goe v0.1.0/go.mod h1:lzWF7FIEvWOWxwDKqyGYQf6ZUaNfKdP144T
 github.com/pborman/getopt v0.0.0-20180729010549-6fdd0a2c7117/go.mod h1:85jBQOZwpVEaDAr341tbn15RS4fCAsIst0qp7i8ex1o=
 github.com/pelletier/go-toml v1.2.0 h1:T5zMGML61Wp+FlcbWjRDT7yAxhJNAiPPLOFECq181zc=
 github.com/pelletier/go-toml v1.2.0/go.mod h1:5z9KED0ma1S8pY6P1sdut58dfprrGBbd/94hg7ilaic=
-github.com/pelletier/go-toml v1.8.0 h1:Keo9qb7iRJs2voHvunFtuuYFsbWeOBh8/P9v/kVMFtw=
-github.com/pelletier/go-toml v1.8.0/go.mod h1:D6yutnOGMveHEPV7VQOuvI/gXY61bv+9bAOTRnLElKs=
+github.com/pelletier/go-toml v1.8.1 h1:1Nf83orprkJyknT6h7zbuEGUEjcyVlCxSUGTENmNCRM=
+github.com/pelletier/go-toml v1.8.1/go.mod h1:T2/BmBdy8dvIRq1a/8aqjN41wvWlN4lrapLU/GW4pbc=
 github.com/philhofer/fwd v1.0.0/go.mod h1:gk3iGcWd9+svBvR0sR+KPcfE+RNWozjowpeBVG3ZVNU=
 github.com/pierrec/lz4 v2.0.5+incompatible/go.mod h1:pdkljMzZIN41W+lC3N2tnIh5sFi+IEE17M5jbnwPHcY=
 github.com/pierrec/lz4 v2.2.6+incompatible/go.mod h1:pdkljMzZIN41W+lC3N2tnIh5sFi+IEE17M5jbnwPHcY=

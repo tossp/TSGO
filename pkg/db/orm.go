@@ -2,7 +2,6 @@ package db
 
 import (
 	"fmt"
-	"github.com/spf13/viper"
 	"strings"
 	"sync"
 	"time"
@@ -23,15 +22,15 @@ var (
 )
 
 func init() {
-	viper.SetDefault("db.User", "ts")
-	viper.SetDefault("db.Password", "123456")
-	viper.SetDefault("db.Prefix", "ts")
-	viper.SetDefault("db.Host", "127.0.0.1")
-	viper.SetDefault("db.Port", 5432)
-	viper.SetDefault("db.Name", "ts")
-	viper.SetDefault("db.Ssl_mode", "disable")
-	viper.SetDefault("db.Max_Idle_Conns", 10)
-	viper.SetDefault("db.Max_Open_Conns", 20)
+	setting.SetDefault("db.User", "ts")
+	setting.SetDefault("db.Password", "123456")
+	setting.SetDefault("db.Prefix", "ts")
+	setting.SetDefault("db.Host", "127.0.0.1")
+	setting.SetDefault("db.Port", 5432)
+	setting.SetDefault("db.Name", "ts")
+	setting.SetDefault("db.Ssl_mode", "disable")
+	setting.SetDefault("db.Max_Idle_Conns", 10)
+	setting.SetDefault("db.Max_Open_Conns", 20)
 }
 
 //StartGorm 启动GORM
@@ -42,15 +41,16 @@ func StartGorm() (err error) {
 	}
 	dialect := fmt.Sprintf(
 		"postgres://%s:%s@%s:%d/%s?sslmode=%s&fallback_application_name=%s&Schema",
-		viper.GetString("db.User"), viper.GetString("db.Password"), viper.GetString("db.Host"),
-		viper.GetInt64("db.Port"), viper.GetString("db.Name"), viper.GetString("db.Ssl_mode"), setting.AppName,
+		setting.GetString("db.User"), setting.GetString("db.Password"), setting.GetString("db.Host"),
+		setting.GetInt64("db.Port"), setting.GetString("db.Name"), setting.GetString("db.Ssl_mode"),
+		setting.AppName+setting.GetString("name"),
 	)
 	db, err := gorm.Open("postgres", dialect)
 	if err != nil {
-		panic("尝试连接数据库失败：" + strings.Replace(dialect, viper.GetString("db.Password"), "******", -1) + err.Error())
+		panic("尝试连接数据库失败：" + strings.Replace(dialect, setting.GetString("db.Password"), "******", -1) + err.Error())
 	}
-	db.DB().SetMaxIdleConns(viper.GetInt("db.Max_Idle_Conns"))
-	db.DB().SetMaxOpenConns(viper.GetInt("db.Max_Open_Conns"))
+	db.DB().SetMaxIdleConns(setting.GetInt("db.Max_Idle_Conns"))
+	db.DB().SetMaxOpenConns(setting.GetInt("db.Max_Open_Conns"))
 	db.DB().SetConnMaxLifetime(time.Minute * 15)
 	//db.LogMode(true)
 	db.SetLogger(newLog(log.Desugar().Named("db").WithOptions(zap.AddCallerSkip(6))))
@@ -72,7 +72,7 @@ func IsRecordNotFoundError(err error) bool {
 
 //TableName 计算表名
 func TableName(name string) string {
-	return fmt.Sprintf("tsl_%s_%s", strings.ToLower(viper.GetString("db.Prefix")), inflection.Plural(gorm.ToTableName(name)))
+	return fmt.Sprintf("tsl_%s_%s", strings.ToLower(setting.GetString("db.Prefix")), inflection.Plural(gorm.ToTableName(name)))
 }
 
 //TableName 计算表名
