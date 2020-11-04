@@ -40,11 +40,12 @@ func Start() (err error) {
 	if adapter, err = gormAdapter.NewAdapterByDBUsePrefix(db.G(), db.TableName("")); err != nil {
 		return
 	}
-	m := make(model.Model)
 	//log.Info("鉴权模型", setting.GetAccessControlModel())
-	if err = m.LoadModelFromText(defAcm); err != nil {
+	m, err := model.NewModelFromString(defAcm)
+	if err != nil {
 		return
 	}
+	//m.SetLogger()
 	if enforcer, err = casbin.NewSyncedEnforcer(m, adapter); err != nil {
 		return
 	}
