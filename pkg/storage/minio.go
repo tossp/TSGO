@@ -2,6 +2,7 @@ package storage
 
 import (
 	"fmt"
+	"github.com/tossp/tsgo/pkg/log"
 	"net/url"
 	"time"
 
@@ -18,6 +19,8 @@ var (
 	mdmClnt     *madmin.AdminClient
 	bucketName  = setting.GetString("storage.Bucket")
 	bucketOk    = false
+
+	initMinioF = 0
 )
 
 func init() {
@@ -26,16 +29,23 @@ func init() {
 	setting.SetDefault("storage.AccessKey", "Q3AM3UQ867SPQQA43P2F")
 	setting.SetDefault("storage.SecretKey", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
 	setting.SetDefault("storage.Secure", true)
+	//_ = setting.Subscribe(initMinio)
 }
 
 func makeBucket() (err error) {
 	has, err := minioClient.BucketExists(bucketName)
 	if err != nil {
+		if initMinioF != 0 {
+			log.Warn("BucketExists", err)
+		}
 		err = errors.NewMessageError(err, 7100, "查询存储桶错误")
 		return
 	}
 	if !has {
 		if err = minioClient.MakeBucket(bucketName, ""); err != nil {
+			if initMinioF != 0 {
+				log.Warn("MakeBucket", err)
+			}
 			err = errors.NewMessageError(err, 7100, "创建存储桶错误")
 			return
 		}
@@ -51,18 +61,18 @@ func initMinio() (err error) {
 	secretAccessKey := setting.GetString("storage.SecretKey")
 	secure := setting.GetBool("storage.Secure")
 
-	if mdmClnt, err = madmin.New(endpoint, accessKeyID, secretAccessKey, secure); err != nil {
-		err = errors.NewMessageError(err, 7100, "文件存储系统初始化失败")
-		mdmClnt = nil
-		return
-	}
-	mdmClnt.SetAppInfo("sites", "0.0.1")
-	//si, err := mdmClnt.ServerInfo(context.Background())
-	//if err != nil {
-	//    fmt.Println(err)
-	//    return
-	//}
-	//log.Debug("附件服务器", si)
+	defer func() {
+		if err != nil {
+			log.Warn(initMinioF, "文件存储管理初始化失败", err)
+			log.Warn("bucketName", bucketName)
+			log.Warn("endpoint", endpoint)
+			log.Warn("accessKeyID", accessKeyID)
+			log.Warn("secretAccessKey", secretAccessKey)
+			initMinioF++
+		} else {
+			initMinioF = 0
+		}
+	}()
 
 	if minioClient, err = minio.New(endpoint, accessKeyID, secretAccessKey, secure); err != nil {
 		err = errors.NewMessageError(err, 7100, "文件存储系统初始化失败")
@@ -70,9 +80,35 @@ func initMinio() (err error) {
 		return
 	}
 	minioClient.TraceOff()
-	//minioClient.TraceOn(nil)
-	minioClient.SetAppInfo("sites", "0.0.1")
-	err = makeBucket()
+	if initMinioF != 0 {
+		minioClient.TraceOn(nil)
+	}
+
+	minioClient.SetAppInfo(setting.AppName, "0.0.1")
+	//err = makeBucket()
+	if err != nil {
+		log.Warn("准备存储桶失败", err)
+		minioClient = nil
+		return
+	}
+
+	if mdmClnt, err = madmin.New(endpoint, accessKeyID, secretAccessKey, secure); err != nil {
+		err = errors.NewMessageError(err, 7100, "文件存储系统初始化失败")
+		log.Warn("文件存储管理初始化失败", err)
+		log.Warn("bucketName", bucketName)
+		log.Warn("endpoint", endpoint)
+		log.Warn("accessKeyID", accessKeyID)
+		mdmClnt = nil
+		return
+	}
+	mdmClnt.SetAppInfo(setting.AppName, "0.0.1")
+	//si, err := mdmClnt.ServerInfo(context.Background())
+	//if err != nil {
+	//	log.Warn("文件存储信息查询失败", err)
+	//	return
+	//}
+	//log.Debug("附件服务器", si.Servers)
+
 	return
 }
 

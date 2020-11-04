@@ -30,6 +30,7 @@ var (
 	BuildVersion = "invalid"
 	ProjectName  = "invalid"
 )
+
 var (
 	appPath   string
 	globalKey *ecdsa.PrivateKey
@@ -80,6 +81,13 @@ func UseAppPath(elem ...string) string {
 
 func joinPath(base string, elem ...string) string {
 	return filepath.Join(base, filepath.Clean(filepath.Join(elem...)))
+}
+
+func MakePath(base string) func(...string) string {
+	_ = os.MkdirAll(base, 0755)
+	return func(elem ...string) string {
+		return filepath.Join(base, filepath.Clean(filepath.Join(elem...)))
+	}
 }
 
 func UseDataPath(elem ...string) string {

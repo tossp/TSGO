@@ -21,8 +21,12 @@ const (
 
 var (
 	tokenKey        = crypto.NewKeyWithKey([]byte(setting.GetSecret() + "TossP.com"))
-	expiresDuration = time.Minute * 30
+	expiresDuration = time.Hour * 24
 )
+
+func init() {
+
+}
 
 type IUser interface {
 	New() IUser
@@ -84,7 +88,7 @@ func init() {
 
 func ReadTimeout() (timeout int64) {
 	timeout = setting.GetInt64("auth.Timeout")
-	if timeout < 1 || timeout > 30 {
+	if timeout < 1 || timeout > 1440 {
 		timeout = 30
 		setting.Set("auth.Timeout", timeout)
 	}

@@ -50,6 +50,7 @@ var mimemaps = map[string]string{
 	".bsh":         "application/x-bsh",
 	".bz2":         "application/x-bzip2",
 	".bz":          "application/x-bzip",
+	".msi":         "application/x-ms-installer",
 	".c++":         "text/plain",
 	".c":           "text/x-c",
 	".cab":         "application/vnd.ms-cab-compressed",
