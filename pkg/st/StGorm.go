@@ -13,6 +13,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+// StGorm
 func StGorm(c echo.Context, obj interface{}, omit ...string) (data map[string]interface{}, err error) {
 	if err = mustPtrStruct(obj); err != nil {
 		return
@@ -95,7 +96,7 @@ func StGorm(c echo.Context, obj interface{}, omit ...string) (data map[string]in
 		}
 	}
 
-	var total int
+	var total int64
 	if err = m.Model(obj).Count(&total).Error; err != nil {
 		err = errors.NewMessageError(err, 0, "获取列表数量错误")
 		return
@@ -114,6 +115,8 @@ func StGorm(c echo.Context, obj interface{}, omit ...string) (data map[string]in
 	data = make(map[string]interface{})
 	data["total"] = total
 	data["list"] = objs
+	data["pi"] = pi
+	data["ps"] = ps
 	return
 }
 

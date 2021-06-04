@@ -3,6 +3,8 @@ package errors
 import (
 	"fmt"
 
+	"github.com/hashicorp/go-multierror"
+
 	"golang.org/x/xerrors"
 )
 
@@ -11,8 +13,10 @@ var (
 	New               = xerrors.New
 	Is                = xerrors.Is
 	As                = xerrors.As
-	Unwrap            = xerrors.Unwrap // 获取内层错误
-	DbMsg             = "服务器错误"
+	Unwrap            = xerrors.Unwrap    // 获取内层错误
+	Errorf            = xerrors.Errorf    // 获取内层错误
+	Append            = multierror.Append // 获取内层错误
+	DbMsg             = "数据库服务器错误"
 	Casbin            = "权限系统错误"
 	Code              = "健壮验证错误"
 	ErrForbidden      = New("禁止访问")

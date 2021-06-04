@@ -3,12 +3,13 @@ package validator
 import (
 	"database/sql/driver"
 	"fmt"
-	"github.com/go-playground/validator/v10"
-	"github.com/tossp/tsgo/pkg/db"
 	"reflect"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/go-playground/validator/v10"
+	"github.com/tossp/tsgo/pkg/db"
 )
 
 var (

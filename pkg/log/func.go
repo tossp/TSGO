@@ -1,6 +1,12 @@
 package log
 
-import "go.uber.org/zap"
+import (
+	"github.com/jackc/pgconn"
+	"go.uber.org/zap"
+	"gorm.io/gorm"
+
+	"github.com/tossp/tsgo/pkg/errors"
+)
 
 func Desugar() *zap.Logger {
 	return z.Desugar()
@@ -54,6 +60,37 @@ func Infow(msg string, keysAndValues ...interface{}) {
 func Warn(args ...interface{}) {
 	z.Warn(args...)
 }
+func WarnErr(err error, args ...interface{}) {
+	if err != nil {
+		if len(args) > 0 {
+			z.Warn(append([]interface{}{err}, args...))
+		} else {
+			z.Warn(err)
+		}
+
+	}
+}
+func WarnDB(tx *gorm.DB, args ...interface{}) (err error) {
+	err = tx.Error
+	if err != nil {
+		zp := z.With()
+		pgerr, ok := err.(*pgconn.PgError)
+		if ok {
+			zp = zp.With(
+				"RowsAffected", tx.RowsAffected,
+				"pgErr", pgerr,
+			)
+			z.Warnf("%#v", pgerr)
+			err = errors.ErrDatabase
+		}
+		if len(args) > 0 {
+			zp.Warn(append([]interface{}{err}, args...))
+		} else {
+			zp.Warn(err)
+		}
+	}
+	return
+}
 func Warnw(msg string, keysAndValues ...interface{}) {
 	z.Warnw(msg, keysAndValues...)
 }
@@ -66,16 +103,19 @@ func Errorw(msg string, keysAndValues ...interface{}) {
 	z.Errorw(msg, keysAndValues...)
 }
 
+func DPanic(args ...interface{}) {
+	z.DPanic(args...)
+}
+func Panic(args ...interface{}) {
+	z.Panic(args...)
+}
+
 func Fatal(args ...interface{}) {
 	z.Fatal(args...)
 }
 
 func Fatalw(msg string, keysAndValues ...interface{}) {
 	z.Fatalw(msg, keysAndValues...)
-}
-
-func Panic(args ...interface{}) {
-	z.Panic(args...)
 }
 
 // Panicw logs a message with some additional context, then panics. The

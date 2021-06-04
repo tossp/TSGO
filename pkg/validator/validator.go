@@ -7,7 +7,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	zhTrans "github.com/go-playground/validator/v10/translations/zh"
-	"github.com/tossp/tsgo/pkg/null"
+	"github.com/tossp/tsgo/pkg/tstype"
 	//"github.com/tossp/tsgo/pkg/utils"
 	//"github.com/jinzhu/inflection"
 )
@@ -64,12 +64,17 @@ func (v *TsValidator) lazyinit() {
 		v.validator.RegisterTagNameFunc(func(fld reflect.StructField) string {
 			return fld.Tag.Get("desc")
 		})
-		v.validator.RegisterValidation("tsdbunique", ValidateUniq, true)
-		v.validator.RegisterValidation("tscmpn", ValidateChinaMobilePhoneNum, true)
-		v.validator.RegisterValidation("idcard", ValidateIdCard, true)
+		_ = v.validator.RegisterValidation("tsdbunique", ValidateUniq, true)
+		_ = v.validator.RegisterValidation("tscmpn", ValidateChinaMobilePhoneNum, true)
+		_ = v.validator.RegisterValidation("idcard", ValidateIdCard, true)
 		v.validator.RegisterCustomTypeFunc(ValidateDBType,
 			sql.NullString{}, sql.NullInt64{}, sql.NullInt64{}, sql.NullBool{}, sql.NullFloat64{},
-			null.Bool{}, null.CIDR{}, null.Float{}, null.Int{}, null.IP{}, null.String{}, null.Time{}, null.UUID{},
+			tstype.UUID{},
+			// valid:".{2,}?"
+			tstype.Varchar{}, tstype.Text{}, tstype.Bool{}, tstype.Timestamptz{},
+			tstype.Bool{}, tstype.Numeric{}, tstype.Timestamptz{},
+			tstype.JSON{}, tstype.JSONB{}, tstype.Hstore{},
+			tstype.UUID{}, tstype.UUIDArray{}, tstype.Inet{}, tstype.InetArray{},
 		)
 
 		trans := FindTranslator("zh")
@@ -91,6 +96,17 @@ func (v *TsValidator) RegisterTranslation(tag string, registerFn validator.Regis
 	v.lazyinit()
 	trans := FindTranslator(locales...)
 	return v.validator.RegisterTranslation(tag, trans, registerFn, translationFn)
+}
+
+func RegisterValidation(tag string, fn validator.Func, callValidationEvenIfNull ...bool) error {
+	return validate.RegisterValidation(tag, fn, callValidationEvenIfNull...)
+}
+
+func RegisterTranslation(tag string, registerFn validator.RegisterTranslationsFunc, translationFn validator.TranslationFunc, locales ...string) error {
+	return validate.RegisterTranslation(tag, registerFn, translationFn, locales...)
+}
+func Validate() *TsValidator {
+	return validate
 }
 
 //New 创建新的验证器

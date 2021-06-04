@@ -2,11 +2,15 @@ package st
 
 import (
 	"fmt"
-	"github.com/jinzhu/gorm"
+	"reflect"
+	"sync"
+
+	"github.com/tossp/tsgo/pkg/db"
 	"github.com/tossp/tsgo/pkg/errors"
 	"github.com/tossp/tsgo/pkg/log"
 	"github.com/tossp/tsgo/pkg/utils"
-	"reflect"
+
+	"gorm.io/gorm/schema"
 )
 
 const (
@@ -38,9 +42,9 @@ func getFieldName(structName interface{}) []string {
 }
 
 //获取结构体中字段的名称
-func getFieldName2(structName interface{}) (fields []*gorm.StructField) {
-	scope := &gorm.Scope{Value: structName}
-	fields = scope.GetStructFields()[:]
+func getFieldName2(structName interface{}) (fields []*schema.Field) {
+	s, _ := schema.Parse(structName, &sync.Map{}, db.G().NamingStrategy)
+	fields = s.Fields[:]
 	return
 }
 

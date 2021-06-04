@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/tossp/tsgo/pkg/log"
-	"github.com/tossp/tsgo/pkg/null"
 	"github.com/tossp/tsgo/pkg/setting"
+	"github.com/tossp/tsgo/pkg/tstype"
 	"github.com/tossp/tsgo/pkg/utils/crypto"
 
 	"github.com/dgrijalva/jwt-go"
@@ -30,8 +30,8 @@ func init() {
 
 type IUser interface {
 	New() IUser
-	GetByID(null.UUID) error
-	ID() null.UUID
+	GetByID(tstype.UUID) error
+	ID() tstype.UUID
 	HasAdmin() bool
 	OnlineExtend(*TsClaims) error
 	OnlineCheck(*TsClaims, net.IP) error
@@ -43,10 +43,10 @@ func (m *user) New() IUser {
 	panic("请使用 jwt.SetUserMode 初始化默认用户接口")
 }
 
-func (m *user) GetByID(id null.UUID) error {
+func (m *user) GetByID(id tstype.UUID) error {
 	panic("请使用 jwt.SetUserMode 初始化默认用户接口")
 }
-func (m *user) ID() null.UUID {
+func (m *user) ID() tstype.UUID {
 	panic("请使用 jwt.SetUserMode 初始化默认用户接口")
 }
 func (m *user) HasAdmin() bool {
@@ -62,7 +62,7 @@ func (m *user) OnlineCheck(c *TsClaims, ip net.IP) error {
 
 type TsClaims struct {
 	jwt.StandardClaims
-	UserID null.UUID `json:"usi,omitempty"`
+	UserID tstype.UUID `json:"usi,omitempty"`
 }
 
 //Extend 延期Token
@@ -83,13 +83,14 @@ func (c *TsClaims) SignedString() (t string) {
 
 func init() {
 	setting.SetDefault("auth.Timeout", 30)
-	ReadTimeout()
+	_ = setting.Subscribe(ReadTimeout)
+
 }
 
 func ReadTimeout() (timeout int64) {
 	timeout = setting.GetInt64("auth.Timeout")
-	if timeout < 1 || timeout > 1440 {
-		timeout = 30
+	if timeout < 1 {
+		timeout = 60
 		setting.Set("auth.Timeout", timeout)
 	}
 	expiresDuration = time.Minute * time.Duration(timeout)
@@ -104,14 +105,14 @@ func SetTimeout(timeout int64) int64 {
 }
 
 //GenerateToken 生成Token
-func GenerateToken(id null.UUID, ct time.Time) (claims *TsClaims, t string) {
+func GenerateToken(id tstype.UUID, ct time.Time) (claims *TsClaims, t string) {
 	claims = new(TsClaims)
 	claims.ExpiresAt = ct.Add(expiresDuration).Unix()
 	claims.NotBefore = ct.Unix()
 	claims.IssuedAt = time.Now().Unix()
 
 	claims.UserID = id
-	claims.Id = null.NewUuidV4().String()
+	claims.Id = utils.NewUuidV4().String()
 
 	token := jwt.NewWithClaims(jwt.SigningMethodES512, claims)
 	t, err := token.SignedString(tokenKey)
@@ -135,13 +136,12 @@ func parseToken(token string) (t *jwt.Token, err error) {
 	return
 }
 
-//ParseToken 预处理Token
-func validJwt(u IUser, auth string) (user IUser, claims *TsClaims, err error) {
+//ValidToken 验证Token
+func ValidToken(u IUser, auth string) (user IUser, claims *TsClaims, err error) {
 	l := len(Bearer)
 	if len(auth) > l+1 && auth[:l] == Bearer {
-		t, fuck := parseToken(auth[l:])
-		if fuck != nil {
-			err = fuck
+		var t *jwt.Token
+		if t, err = parseToken(auth[l:]); err != nil {
 			return
 		}
 		if data, ok := t.Claims.(*TsClaims); ok && t.Valid {
@@ -150,7 +150,7 @@ func validJwt(u IUser, auth string) (user IUser, claims *TsClaims, err error) {
 			claims = data
 			return
 		}
-		err = fmt.Errorf("没有找到可用的签名")
 	}
+	err = fmt.Errorf("没有找到可用的签名")
 	return
 }

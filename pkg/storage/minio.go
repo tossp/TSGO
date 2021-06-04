@@ -1,95 +1,121 @@
 package storage
 
 import (
+	"context"
 	"fmt"
-	"github.com/tossp/tsgo/pkg/log"
+	"io"
 	"net/url"
+	"sync"
 	"time"
 
-	minio "github.com/minio/minio-go/v6"
+	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/credentials"
 	"github.com/minio/minio/pkg/madmin"
+
 	"github.com/tossp/tsgo/pkg/errors"
+	"github.com/tossp/tsgo/pkg/log"
 	"github.com/tossp/tsgo/pkg/setting"
 )
 
 const expires = time.Hour
 
 var (
-	minioClient *minio.Client
-	mdmClnt     *madmin.AdminClient
-	bucketName  = setting.GetString("storage.Bucket")
-	bucketOk    = false
+	_minioClient *minio.Client
+	mdmClnt      *madmin.AdminClient
+	bucketName   = setting.GetString("storage.Bucket")
+	confStr      = ""
+	storageLock  sync.RWMutex
 
-	initMinioF = 0
+	errMinioClientNotReady = errors.New("存储未准备就绪")
 )
 
+func minioClient() *minio.Client {
+	storageLock.RLock()
+	defer storageLock.RUnlock()
+	return _minioClient
+}
+func setMinioClient(m *minio.Client) {
+	storageLock.Lock()
+	defer storageLock.Unlock()
+	_minioClient = m
+}
 func init() {
 	setting.SetDefault("storage.Bucket", "sites")
 	setting.SetDefault("storage.Endpoint", "127.0.0.1")
 	setting.SetDefault("storage.AccessKey", "Q3AM3UQ867SPQQA43P2F")
 	setting.SetDefault("storage.SecretKey", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
 	setting.SetDefault("storage.Secure", true)
-	//_ = setting.Subscribe(initMinio)
+	setting.SetDefault("storage.Debug", false)
+	_ = setting.Subscribe(autoInitMinio)
+	log.WarnErr(autoInitMinio())
+}
+func makeConfStr() string {
+	return setting.GetString("storage.Bucket") +
+		setting.GetString("storage.Endpoint") +
+		setting.GetString("storage.AccessKey") +
+		setting.GetString("storage.SecretKey") +
+		setting.GetString("storage.Bucket")
+}
+func autoInitMinio() (err error) {
+	if makeConfStr() == confStr {
+		return
+	}
+	return initMinio()
 }
 
 func makeBucket() (err error) {
-	has, err := minioClient.BucketExists(bucketName)
+	has, err := minioClient().BucketExists(context.Background(), bucketName)
 	if err != nil {
-		if initMinioF != 0 {
-			log.Warn("BucketExists", err)
-		}
 		err = errors.NewMessageError(err, 7100, "查询存储桶错误")
 		return
 	}
 	if !has {
-		if err = minioClient.MakeBucket(bucketName, ""); err != nil {
-			if initMinioF != 0 {
-				log.Warn("MakeBucket", err)
-			}
+		if err = minioClient().MakeBucket(context.Background(), bucketName, minio.MakeBucketOptions{Region: "us-east-1"}); err != nil {
 			err = errors.NewMessageError(err, 7100, "创建存储桶错误")
 			return
 		}
 	}
-	bucketOk = true
 	return
 }
 
 func initMinio() (err error) {
+	confStr = makeConfStr()
 	bucketName = setting.GetString("storage.Bucket")
 	endpoint := setting.GetString("storage.Endpoint")
 	accessKeyID := setting.GetString("storage.AccessKey")
 	secretAccessKey := setting.GetString("storage.SecretKey")
 	secure := setting.GetBool("storage.Secure")
 
-	defer func() {
-		if err != nil {
-			log.Warn(initMinioF, "文件存储管理初始化失败", err)
-			log.Warn("bucketName", bucketName)
-			log.Warn("endpoint", endpoint)
-			log.Warn("accessKeyID", accessKeyID)
-			log.Warn("secretAccessKey", secretAccessKey)
-			initMinioF++
-		} else {
-			initMinioF = 0
-		}
-	}()
-
-	if minioClient, err = minio.New(endpoint, accessKeyID, secretAccessKey, secure); err != nil {
-		err = errors.NewMessageError(err, 7100, "文件存储系统初始化失败")
-		minioClient = nil
-		return
-	}
-	minioClient.TraceOff()
-	if initMinioF != 0 {
-		minioClient.TraceOn(nil)
-	}
-
-	minioClient.SetAppInfo(setting.AppName, "0.0.1")
-	//err = makeBucket()
+	mc, err := minio.New(endpoint, &minio.Options{
+		Region: "us-east-1",
+		Creds:  credentials.NewStaticV4(accessKeyID, secretAccessKey, ""),
+		Secure: secure,
+	})
 	if err != nil {
-		log.Warn("准备存储桶失败", err)
-		minioClient = nil
+		err = errors.NewMessageError(err, 7100, "文件存储系统初始化失败")
+		log.Warn("文件存储管理初始化失败", err)
+		log.Warn("bucketName", bucketName)
+		log.Warn("endpoint", endpoint)
+		log.Warn("accessKeyID", accessKeyID)
+		//log.Warn("secretAccessKey", secretAccessKey)
 		return
+	}
+	if setting.GetBool("storage.Debug") {
+		mc.TraceOn(nil)
+	} else {
+		mc.TraceOff()
+	}
+	mc.SetAppInfo(setting.AppName(), "0.0.1")
+
+	setMinioClient(mc)
+
+	// TODO(zh) 电院因WAF不合理配置导致检查失败，逻辑上可能会出现丢附件的情况，其他环境中必须开启！！！
+	if !setting.GetBool("env.scdy") {
+		if err = makeBucket(); err != nil {
+			log.Warn("准备存储桶失败", err)
+			setMinioClient(nil)
+			return
+		}
 	}
 
 	if mdmClnt, err = madmin.New(endpoint, accessKeyID, secretAccessKey, secure); err != nil {
@@ -101,35 +127,19 @@ func initMinio() (err error) {
 		mdmClnt = nil
 		return
 	}
-	mdmClnt.SetAppInfo(setting.AppName, "0.0.1")
-	//si, err := mdmClnt.ServerInfo(context.Background())
-	//if err != nil {
-	//	log.Warn("文件存储信息查询失败", err)
-	//	return
-	//}
-	//log.Debug("附件服务器", si.Servers)
-
-	return
-}
-
-func tryMinio() (err error) {
-	if minioClient != nil && bucketOk {
-		return
+	mdmClnt.SetAppInfo(setting.AppName(), "0.0.1")
+	if setting.GetBool("storage.Debug") {
+		mdmClnt.TraceOn(nil)
+		si, fuck := mdmClnt.ServerInfo(context.Background())
+		if fuck != nil {
+			log.Warn("文件存储信息查询失败", fuck)
+			return
+		}
+		log.Debug("附件服务器", si.Servers)
+	} else {
+		mdmClnt.TraceOff()
 	}
-	err = initMinio()
-	return
-}
 
-func PresignedGetInline(objectPath string) (presignedURL *url.URL, err error) {
-	reqParams := make(url.Values)
-	presignedURL, err = PresignedGet(objectPath, reqParams)
-	return
-}
-
-func PresignedGetAttachment(objectPath string, filename string) (presignedURL *url.URL, err error) {
-	reqParams := make(url.Values)
-	reqParams.Set("response-content-disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
-	presignedURL, err = PresignedGet(objectPath, reqParams)
 	return
 }
 
@@ -138,50 +148,52 @@ func PresignedGet(objectPath string, reqParams url.Values, expiresDuration ...ti
 	if len(expiresDuration) == 1 {
 		expiresTime = expiresDuration[0]
 	}
-	if err = tryMinio(); err != nil {
+	if minioClient() == nil {
+		err = errMinioClientNotReady
 		return
 	}
 	reqParams.Add("response-cache-control", "private")
 	reqParams.Add("response-cache-control", "max-age=3600")
-	preURL, err = minioClient.PresignedGetObject(bucketName, objectPath, expiresTime, reqParams)
+	preURL, err = minioClient().PresignedGetObject(context.Background(), bucketName, objectPath, expiresTime, reqParams)
 	if err != nil {
 		err = errors.NewMessageError(err, 7100, "presignedGet 失败")
 		return
 	}
 	return
 }
-
-func PresignedPut(objectPath string) (presignedURL string, err error) {
-	if err = tryMinio(); err != nil {
+func Get(objectPath string) (obj *minio.Object, err error) {
+	if minioClient() == nil {
+		err = errMinioClientNotReady
 		return
 	}
-
-	preUrl, err := minioClient.PresignedPutObject(bucketName, objectPath, expires)
-	err = errors.NewMessageError(err, 7100, "创建 PresignedPutObject 失败")
+	obj, err = minioClient().GetObject(context.Background(), bucketName, objectPath, minio.GetObjectOptions{})
 	if err != nil {
+		err = errors.NewMessageError(err, 7100, "GetObject 失败")
 		return
 	}
-	presignedURL = preUrl.String()
 	return
 }
 func PresignedPostPolicy(policy *minio.PostPolicy) (u *url.URL, formData map[string]string, err error) {
-	if err = tryMinio(); err != nil {
+	if minioClient() == nil {
+		err = errMinioClientNotReady
 		return
 	}
 	if err = policy.SetBucket(bucketName); err != nil {
 		return
 	}
-	return minioClient.PresignedPostPolicy(policy)
+	return minioClient().PresignedPostPolicy(context.Background(), policy)
 }
 func NewPostPolicy() *minio.PostPolicy {
 	return minio.NewPostPolicy()
 }
+func PutObject(objectName string, reader io.Reader, objectSize int64,
+	opts minio.PutObjectOptions) (info minio.UploadInfo, err error) {
+	info, err = minioClient().PutObject(context.Background(), bucketName, objectName, reader, objectSize, opts)
+	return
+}
 
 func ListIncompleteUploads() {
-	doneCh := make(chan struct{})
-	defer close(doneCh)
-	//isRecursive := true // Recursively list everything at 'myprefix'
-	multiPartObjectCh := minioClient.ListIncompleteUploads(bucketName, "", true, doneCh)
+	multiPartObjectCh := minioClient().ListIncompleteUploads(context.Background(), bucketName, "", true)
 	fmt.Println("listIncompleteUploads", "开始清理")
 	for multiPartObject := range multiPartObjectCh {
 		if multiPartObject.Err != nil {

@@ -13,6 +13,8 @@ PACKAGES:=$(shell go list ./... | grep -v /vendor/)
 VETPACKAGES=`go list ./... | grep -v /vendor/ | grep -v /examples/`
 GOFILES=`find . -name "*.go" -type f -not -path "./vendor/*"`
 BUILD_TIME=`date +%FT%T%z`
+BUILD_USER=`echo "BID/${CI_BUILD_ID} PID/${CI_PIPELINE_ID} NAME/${CI_PROJECT_NAME} SLUG/${CI_BUILD_REF_SLUG} USER/${GITLAB_USER_EMAIL} RUNNER/${CI_RUNNER_DESCRIPTION} BUILDER/${GOLANG_VERSION}"`
+BUILD_VERSION=`echo "TAG/${GITTAG} GIT/${GITVERSION} NAME/${CI_PROJECT_NAME} CCT/${CI_COMMIT_TAG}"`
 LDFLAGS=-ldflags "-s -w -X github.com/tossp/tsgo/pkg/setting.ProjectName=$(PROJECTNAME) -X github.com/tossp/tsgo/pkg/setting.GitTag=$(GITTAG) -X github.com/tossp/tsgo/pkg/setting.GitVersion=${GITVERSION} -X github.com/tossp/tsgo/pkg/setting.BuildTime=${BUILD_TIME} -X github.com/tossp/tsgo/pkg/setting.BuildVersion=${VERSION}"
 GOBUILD=go build -trimpath -tags=jsoniter
 
@@ -40,7 +42,7 @@ list:
 
 fmt:
 	@echo " > gofmt..."
-	# @goimports -w ${GOFILES}
+	@goimports -w ${GOFILES}
 	@go fmt ./...
 
 check: fmt

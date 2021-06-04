@@ -19,7 +19,7 @@ func EchoEnforcer() echo.MiddlewareFunc {
 			}
 			obj := c.Request().URL.Path
 			act := c.Request().Method
-			if ok, err := casbin.E().Enforce(u.ID().String(), obj, act, "*"); err != nil {
+			if ok, err := casbin.E().Enforce(u.ID().UUID.String(), obj, act, "*"); err != nil {
 				log.Error("RBAC", err)
 				c.Set(authorityKey, "ERR")
 				return echo.NewHTTPError(http.StatusForbidden, "鉴权系统错误，请稍后再试")

@@ -4,24 +4,49 @@ import (
 	"fmt"
 	"strings"
 	"sync"
-	"time"
 
+	"github.com/jackc/pgtype"
+
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+	"gorm.io/gorm/schema"
+
+	"github.com/tossp/tsgo/pkg/errors"
 	"github.com/tossp/tsgo/pkg/log"
 	"github.com/tossp/tsgo/pkg/setting"
-	"go.uber.org/zap"
-
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/postgres"
-	"github.com/jinzhu/inflection"
 )
 
 var (
 	g             *gorm.DB
 	gormTableLock = new(sync.RWMutex)
+	Expr          = gorm.Expr
 	dbGormTables  []interface{}
+	naming        schema.NamingStrategy
+	confStr       = ""
 )
 
+func makeConfStr() string {
+	return setting.GetString("db.User") +
+		setting.GetString("db.password") +
+		setting.GetString("db.Prefix") +
+		setting.GetString("db.Name") +
+		setting.GetString("db.Ssl_mode") +
+		setting.GetString("db.TimeZone") +
+		setting.GetString("db.Max_Idle_Conns") +
+		setting.GetString("db.Max_Open_Conns") +
+		setting.GetString("db.Host") +
+		setting.GetString("db.Port") +
+		setting.GetString("name")
+}
+
+func autoMakeDB() (err error) {
+	if confStr == makeConfStr() {
+		return
+	}
+	return makeDB()
+}
 func init() {
+	pgtype.IgnoreUndefined()
 	setting.SetDefault("db.User", "ts")
 	setting.SetDefault("db.Password", "123456")
 	setting.SetDefault("db.Prefix", "ts")
@@ -29,34 +54,38 @@ func init() {
 	setting.SetDefault("db.Port", 5432)
 	setting.SetDefault("db.Name", "ts")
 	setting.SetDefault("db.Ssl_mode", "disable")
+	setting.SetDefault("db.TimeZone", "Asia/Shanghai")
 	setting.SetDefault("db.Max_Idle_Conns", 10)
 	setting.SetDefault("db.Max_Open_Conns", 20)
+	_ = setting.Subscribe(autoMakeDB)
 }
 
-//StartGorm 启动GORM
-func StartGorm() (err error) {
+//Start 启动GORM
+func Start() (err error) {
+	err = makeDB()
+	gPing()
+	return
+}
+func makeDB() (err error) {
 	log.Info("初始化数据模型")
-	gorm.DefaultTableNameHandler = func(db *gorm.DB, defaultTableName string) string {
-		return TableName(defaultTableName)
-	}
+	confStr = makeConfStr()
+	naming = schema.NamingStrategy{TablePrefix: fmt.Sprintf("tsl_%s_", strings.ToLower(setting.GetString("db.Prefix")))}
 	dialect := fmt.Sprintf(
-		"postgres://%s:%s@%s:%d/%s?sslmode=%s&fallback_application_name=%s&Schema",
+		"postgres://%s:%s@%s:%d/%s?sslmode=%s&application_name=%s&TimeZone=%s",
 		setting.GetString("db.User"), setting.GetString("db.Password"), setting.GetString("db.Host"),
 		setting.GetInt64("db.Port"), setting.GetString("db.Name"), setting.GetString("db.Ssl_mode"),
-		setting.AppName+setting.GetString("name"),
+		setting.AppName()+setting.GetString("name"), setting.GetString("db.TimeZone"),
 	)
-	db, err := gorm.Open("postgres", dialect)
+	logger := NewLogger(log.Desugar())
+	logger.SetAsDefault()
+	db, err := gorm.Open(postgres.Open(dialect), &gorm.Config{
+		NamingStrategy: naming,
+		Logger:         logger,
+	})
 	if err != nil {
 		panic("尝试连接数据库失败：" + strings.Replace(dialect, setting.GetString("db.Password"), "******", -1) + err.Error())
 	}
-	db.DB().SetMaxIdleConns(setting.GetInt("db.Max_Idle_Conns"))
-	db.DB().SetMaxOpenConns(setting.GetInt("db.Max_Open_Conns"))
-	db.DB().SetConnMaxLifetime(time.Minute * 15)
-	//db.LogMode(true)
-	db.SetLogger(newLog(log.Desugar().Named("db").WithOptions(zap.AddCallerSkip(6))))
-	//db.LogMode(false)
 	g = db
-	go gPing()
 	return
 }
 
@@ -67,17 +96,17 @@ func G() *gorm.DB {
 
 //IsRecordNotFoundError GORM实例
 func IsRecordNotFoundError(err error) bool {
-	return gorm.IsRecordNotFoundError(err)
+	return errors.Is(err, gorm.ErrRecordNotFound)
 }
 
 //TableName 计算表名
 func TableName(name string) string {
-	return fmt.Sprintf("tsl_%s_%s", strings.ToLower(setting.GetString("db.Prefix")), inflection.Plural(gorm.ToTableName(name)))
+	return naming.TableName(name)
 }
 
 //TableName 计算表名
 func ColumnName(name string) string {
-	return gorm.ToColumnName(name)
+	return naming.ColumnName("", name)
 }
 
 func autoMigrate() {
@@ -86,14 +115,24 @@ func autoMigrate() {
 	//CREATE EXTENSION IF NOT EXISTS postgis_tiger_geocoder;
 	//CREATE EXTENSION IF NOT EXISTS fuzzystrmatch;
 	//CREATE EXTENSION IF NOT EXISTS citext;
-	for _, err := range g.Exec(`CREATE EXTENSION IF NOT EXISTS hstore;CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`).GetErrors() {
+	sqlDB, err := g.DB()
+	if err != nil {
+		log.Errorw("获取数据库失败", "err", err)
+		return
+	}
+	if _, err := sqlDB.Exec(`CREATE EXTENSION IF NOT EXISTS hstore;CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`); err != nil {
 		log.Warnw("数据库插件集成失败", "err", err)
 	}
 	//g.AutoMigrate(&Organisation{})
 }
 
 func gPing() {
-	if err := g.DB().Ping(); err != nil {
+	sqlDB, err := g.DB()
+	if err != nil {
+		log.Errorw("获取数据库失败", "err", err)
+		return
+	}
+	if err = sqlDB.Ping(); err != nil {
 		log.Errorw("连接数据库测试失败", "err", err)
 		return
 	}
@@ -117,42 +156,20 @@ func gsync() (err error) {
 	gormTableLock.RLock()
 	defer gormTableLock.RUnlock()
 	defer log.Info("同步数据库实体过程结束")
-	if err = g.Debug().AutoMigrate(dbGormTables...).Error; err != nil {
+	if err = g.AutoMigrate(dbGormTables...); err != nil {
 		log.Errorw("同步数据库实体错误", "err", err)
 		return
 	}
 	return
 }
 
-//Logger 日志实体
-type Logger struct {
-	zap *zap.Logger
-}
-
-func newLog(logger *zap.Logger) Logger {
-	return Logger{zap: logger}
-}
-
-//Print 打印信息
-func (l Logger) Print(values ...interface{}) {
-	if len(values) < 2 {
-		log.Warn("遗漏来源", values)
+func DelAll() (err error) {
+	gormTableLock.RLock()
+	defer gormTableLock.RUnlock()
+	defer log.Info("清除数据库实体过程结束")
+	if err = g.Debug().Migrator().DropTable(dbGormTables...); err != nil {
+		log.Errorw("清除数据库实体错误", "err", err)
 		return
 	}
-
-	switch values[0] {
-	case "sql":
-		l.zap.Debug("sql",
-			zap.String("query", values[3].(string)),
-			zap.Any("values", values[4]),
-			zap.Duration("duration", values[2].(time.Duration)),
-			zap.Int64("affected-rows", values[5].(int64)),
-			zap.String("source", values[1].(string)), // if AddCallerSkip(6) is well defined, we can safely remove this field
-		)
-	default:
-		l.zap.Debug("other",
-			zap.Any("values", values[2:]),
-			zap.String("source", values[1].(string)), // if AddCallerSkip(6) is well defined, we can safely remove this field
-		)
-	}
+	return
 }

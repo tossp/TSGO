@@ -2,10 +2,11 @@ package jwt
 
 import (
 	"fmt"
-	"github.com/tossp/tsgo/pkg/utils"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/tossp/tsgo/pkg/utils"
 
 	"github.com/labstack/echo/v4"
 )
@@ -35,13 +36,9 @@ func EchoJwt(u IUser) echo.MiddlewareFunc {
 			useCookie := false
 			auth := c.Request().Header.Get(echo.HeaderAuthorization)
 			BearerLen := len(Bearer)
-			auth = c.Request().Header.Get(echo.HeaderAuthorization)
-			if auth == "" {
-				auth = c.Request().Header.Get(echo.HeaderAuthorization)
-			}
 		AUTH:
 			if len(auth) > BearerLen+1 && auth[:BearerLen] == Bearer {
-				user, claims, err := validJwt(u, auth)
+				user, claims, err := ValidToken(u, auth)
 				if err != nil {
 					cc.Log("令牌", fmt.Sprintf("校验错误 %v", err))
 					c.Set(authErrKey, err)
@@ -52,7 +49,6 @@ func EchoJwt(u IUser) echo.MiddlewareFunc {
 					c.Set(authErrKey, err)
 					return next(c)
 				}
-
 				c.Set("claims.exp", time.Unix(claims.ExpiresAt, 0))
 				c.Set("claims", claims)
 				c.Set(authUserKey, user)
