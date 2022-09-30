@@ -24,7 +24,7 @@ require (
 	github.com/jackc/pgtype v1.7.0
 	github.com/jinzhu/gorm v1.9.16
 	github.com/kr/text v0.2.0 // indirect
-	github.com/labstack/echo/v4 v4.3.0
+	github.com/labstack/echo/v4 v4.9.0
 	github.com/magiconair/properties v1.8.4 // indirect
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible // indirect
 	github.com/minio/minio v0.0.0-20201103204752-b9277c803098
@@ -41,11 +41,11 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.7.1
-	github.com/stretchr/testify v1.5.1
+	github.com/stretchr/testify v1.7.0
 	github.com/tjfoc/gmsm v1.3.2
 	go.uber.org/multierr v1.6.0 // indirect
 	go.uber.org/zap v1.16.0
-	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2
+	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5
 	golang.org/x/lint v0.0.0-20200302205851-738671d3881b // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
